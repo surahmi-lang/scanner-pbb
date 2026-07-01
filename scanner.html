@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner PBB Khusus SPPT</title>
+    <title>Scanner PBB - Fokus Nominal</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 15px; text-align: center; }
@@ -14,7 +14,7 @@
         .card h3 { margin: 0 0 5px 0; font-size: 14px; color: #aaa; }
         .card p { margin: 0; font-size: 20px; font-weight: bold; color: #2ecc71; }
         #video-container { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid #2ecc71; margin-bottom: 15px; }
-        video { width: 100%; display: block; filter: grayscale(100%) contrast(120%); }
+        video { width: 100%; display: block; filter: grayscale(100%) contrast(125%); }
         button { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: #2ecc71; color: #fff; }
         .btn-primary:active { background: #27ae60; }
@@ -30,8 +30,8 @@
 <body>
 
 <div class="container">
-    <h2>⚡ Lensa PBB SPPT v3.0</h2>
-    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Format Scan Disesuaikan untuk Struk Biru SPPT</p>
+    <h2>⚡ Lensa PBB Fokus Nominal</h2>
+    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Membaca Nilai Pajak Otomatis & Proteksi Duplikat Sebaris</p>
 
     <div class="dashboard">
         <div class="card">
@@ -58,13 +58,13 @@
         <button class="btn-danger" style="padding: 10px; font-size: 14px;" id="btn-reset">🗑️ Reset Data</button>
     </div>
 
-    <h3 style="text-align: left; margin-top: 20px; font-size: 14px; color: #aaa;">Riwayat Setoran:</h3>
+    <h3 style="text-align: left; margin-top: 20px; font-size: 14px; color: #aaa;">Riwayat Setoran Valid:</h3>
     <table class="log-table">
         <thead>
             <tr>
                 <th>No</th>
                 <th>Metode</th>
-                <th>Nominal Rupiah</th>
+                <th>Nominal Pajak</th>
             </tr>
         </thead>
         <tbody id="log-body">
@@ -95,18 +95,17 @@
         .then(stream => { video.srcObject = stream; })
         .catch(err => { statusDiv.innerHTML = "Kamera gagal: " + err.message; });
 
-    // JALUR LALU LINTAS AI SCANNER
     btnJepret.addEventListener('click', async () => {
-        statusDiv.innerHTML = "📸 Mengunci struk PBB...";
+        statusDiv.innerHTML = "📸 Mengunci gambar...";
         btnJepret.disabled = true;
 
         const context = canvas.getContext('2d');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        context.filter = 'grayscale(100%) contrast(120%)';
+        context.filter = 'grayscale(100%) contrast(125%)';
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        statusDiv.innerHTML = "🧠 AI sedang melacak baris 'SPPT TAHUN/RP'...";
+        statusDiv.innerHTML = "🧠 AI sedang menyaring nilai nominal...";
 
         try {
             const { data: { text } } = await Tesseract.recognize(canvas, 'ind');
@@ -115,11 +114,11 @@
             
             for (let baris of barisTeks) {
                 let bersih = baris.toUpperCase().replace(/\s+/g, '');
-                // Kecocokan algoritma baru mendeteksi kemunculan teks SPPT atau TAHUN
-                if (bersih.includes("SPPT") || bersih.includes("TAHUN") || bersih.includes("2025")) {
+                
+                // Fokus penuh mencari baris nominal SPPT
+                if (bersih.includes("SPPT") || bersih.includes("TAHUN") || bersih.includes("2025") || bersih.includes("2026")) {
                     let kumpulanAngka = baris.match(/\d[\d.,]*/g);
                     if (kumpulanAngka && kumpulanAngka.length >= 2) {
-                        // Ambil angka paling terakhir di baris tersebut (yaitu nominal rupiahnya)
                         let angkaBersih = kumpulanAngka[kumpulanAngka.length - 1].replace(/[.,]/g, "");
                         let hasilParses = parseInt(angkaBersih);
                         if (hasilParses > 1000) {
@@ -130,13 +129,23 @@
                 }
             }
 
-            // Jika AI bawaan HP tetap menyerah membaca polanya
+            // Fallback Popup jika AI meleset membaca angka akibat tinta pudar
             if (nominalDitemukan === 0) {
-                let koreksi = prompt("Pola kertas berbatik terdeteksi. Sila ketik nominal Rupiah dari struk di layar:", "73000");
+                let koreksi = prompt("AI ragu nilai nominalnya. Silakan ketik angka Rupiahnya:", "73000");
                 nominalDitemukan = parseInt(koreksi.replace(/[.,]/g, "")) || 0;
             }
 
             if (nominalDitemukan > 0) {
+                // VALIDASI ANTI-DUPLIKAT: Cek apakah nominal sama dengan struk terakhir yang baru masuk
+                if (riwayatData.length > 0 && riwayatData[riwayatData.length - 1].nominal === nominalDitemukan) {
+                    let konfirmasi = confirm(`⚠️ Perhatian: Nominal Rp ${nominalDitemukan.toLocaleString('id-ID')} sama dengan data sebelumnya.\nApakah ini benar-benar dokumen baru?`);
+                    if (!konfirmasi) {
+                        statusDiv.innerHTML = "🟡 Scan duplikat dibatalkan oleh pengguna.";
+                        btnJepret.disabled = false;
+                        return;
+                    }
+                }
+
                 simpanData("AI Scanner", nominalDitemukan);
                 statusDiv.innerHTML = "🟢 Berhasil disimpan!";
             } else {
@@ -144,18 +153,23 @@
             }
 
         } catch (error) {
-            statusDiv.innerHTML = "❌ Gagal. Sila klik tombol Input Manual!";
+            statusDiv.innerHTML = "❌ Gagal memproses. Gunakan input manual!";
         } finally {
             btnJepret.disabled = false;
         }
     });
 
-    // JALUR MANUAL INSTAN
     btnManual.addEventListener('click', () => {
-        let inputUser = prompt("Masukkan nominal Rupiah langsung (Contoh: 73000):", "");
-        if (inputUser === null) return;
+        let inputUser = prompt("Masukkan nominal Rupiah (Contoh: 73000):", "");
+        if (!inputUser) return;
         let nominalBersih = parseInt(inputUser.replace(/[.,\s]/g, "")) || 0;
+        
         if (nominalBersih > 0) {
+            if (riwayatData.length > 0 && riwayatData[riwayatData.length - 1].nominal === nominalBersih) {
+                let konfirmasi = confirm(`⚠️ Nominal sama dengan data sebelumnya. Tetap simpan?`);
+                if (!konfirmasi) return;
+            }
+            
             simpanData("Manual", nominalBersih);
             statusDiv.innerHTML = "🟢 Berhasil disimpan secara manual!";
         }
@@ -188,19 +202,19 @@
 
     btnDownload.addEventListener('click', () => {
         if(riwayatData.length === 0) { alert("Belum ada data!"); return; }
-        let csv = "No,Metode,Nominal\n";
+        let csv = "No,Metode,Nominal Pajak\n";
         riwayatData.forEach((d, i) => { csv += `${i+1},${d.text},${d.nominal}\n`; });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", `Rekap_PBB.csv`);
+        link.setAttribute("download", `Rekap_PBB_Nominal.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     });
 
     btnReset.addEventListener('click', () => {
-        if (confirm("Reset data?")) {
+        if (confirm("Hapus seluruh rekap harian?")) {
             localStorage.clear(); riwayatData = []; akumulasiUang = 0; updateDashboard();
             statusDiv.innerHTML = "🗑️ Data dibersihkan.";
         }
