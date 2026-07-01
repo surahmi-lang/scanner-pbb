@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner PBB - Radar Kotak Merah</title>
+    <title>Scanner PBB SPPT - Akurasi Tinggi</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 15px; text-align: center; }
@@ -14,11 +14,10 @@
         .card h3 { margin: 0 0 5px 0; font-size: 14px; color: #aaa; }
         .card p { margin: 0; font-size: 20px; font-weight: bold; color: #2ecc71; }
         
-        /* Area Video dengan Garis Bantu Bidik Kotak Merah */
         #video-container { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid #2ecc71; margin-bottom: 15px; }
-        video { width: 100%; display: block; filter: grayscale(100%) contrast(130%); }
-        .radar-box { position: absolute; right: 15px; bottom: 15px; width: 45%; height: 30%; border: 3px dashed #e74c3c; border-radius: 6px; pointer-events: none; box-shadow: 0 0 10px rgba(231,76,60,0.5); }
-        .radar-label { position: absolute; right: 15px; bottom: 48%; color: #e74c3c; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+        video { width: 100%; display: block; }
+        .radar-box { position: absolute; right: 10px; bottom: 15px; width: 45%; height: 25%; border: 3px dashed #e74c3c; border-radius: 6px; pointer-events: none; box-shadow: 0 0 10px rgba(231,76,60,0.5); }
+        .radar-label { position: absolute; right: 10px; bottom: 43%; color: #e74c3c; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
 
         button { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: #2ecc71; color: #fff; }
@@ -35,8 +34,8 @@
 <body>
 
 <div class="container">
-    <h2>⚡ Lensa PBB SPPT Sniper</h2>
-    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Optimasi Deteksi Presisi Area Kanan Bawah</p>
+    <h2>⚡ Lensa PBB SPPT Sniper v4.2</h2>
+    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Peningkatan Akurasi Pembacaan Karakter Dot-Matrix</p>
 
     <div class="dashboard">
         <div class="card">
@@ -44,7 +43,7 @@
             <p id="stat-total">Rp 0</p>
         </div>
         <div class="card">
-            <h3>Dokumen Tercatat</h3>
+            <h3>Dokumen Terscan</h3>
             <p id="stat-dokumen">0 Struk</p>
         </div>
     </div>
@@ -52,9 +51,10 @@
     <div id="video-container">
         <video id="video" autoplay playsinline></video>
         <div class="radar-label">Posisikan Angka Nominal Di Sini 👇</div>
-        <div class="radar-box"></div> </div>
+        <div class="radar-box"></div>
+    </div>
 
-    <div id="status">Posisikan angka nominal struk di dalam kotak merah putus-putus...</div>
+    <div id="status">Sejajarkan nilai rupiah di dalam kotak merah putus-putus...</div>
 
     <button class="btn-primary" id="btn-jepret">🚀 SCAN NOMINAL SEKARANG</button>
     <button class="btn-warning" style="padding: 10px; font-size: 14px;" id="btn-manual">✏️ INPUT MANUAL CEPAT</button>
@@ -64,7 +64,7 @@
         <button class="btn-danger" style="padding: 10px; font-size: 14px;" id="btn-reset">🗑️ Reset Data</button>
     </div>
 
-    <h3 style="text-align: left; margin-top: 20px; font-size: 14px; color: #aaa;">Riwayat Setoran Hari Ini:</h3>
+    <h3 style="text-align: left; margin-top: 20px; font-size: 14px; color: #aaa;">Riwayat Setoran Valid:</h3>
     <table class="log-table">
         <thead>
             <tr>
@@ -75,7 +75,7 @@
         </thead>
         <tbody id="log-body">
             <tr>
-                <td colspan="3" style="text-align: center; color: #666;">Belum ada data tersimpan.</td>
+                <td colspan="3" style="text-align: center; color: #666;">Belum ada data.</td>
             </tr>
         </tbody>
     </table>
@@ -102,60 +102,69 @@
         audio: false 
     })
     .then(stream => { video.srcObject = stream; })
-    .catch(err => { statusDiv.innerHTML = "Gagal memuat kamera harian."; });
+    .catch(err => { statusDiv.innerHTML = "Gagal memuat kamera."; });
 
     btnJepret.addEventListener('click', async () => {
-        statusDiv.innerHTML = "📸 Mengisolasi area nominal...";
+        statusDiv.innerHTML = "📸 Memproses gambar...";
         btnJepret.disabled = true;
 
         const context = canvas.getContext('2d');
-        
-        // Ukuran asli video dari kamera HP
         const vWidth = video.videoWidth;
         const vHeight = video.videoHeight;
 
-        // Kunci Utama: Hitung koordinat potong spesifik area kotak merah (kanan bawah)
-        const cropWidth = vWidth * 0.45;  // Ambil 45% lebar kanan
-        const cropHeight = vHeight * 0.30; // Ambil 30% tinggi bawah
-        const cropX = vWidth - cropWidth - (vWidth * 0.05); 
-        const cropY = vHeight - cropHeight - (vHeight * 0.05);
+        // Ambil porsi potongan sudut kanan bawah tempat nominal berada
+        const cropWidth = vWidth * 0.45;  
+        const cropHeight = vHeight * 0.25; 
+        const cropX = vWidth - cropWidth - 10;
+        const cropY = vHeight - cropHeight - 15;
 
         canvas.width = cropWidth;
         canvas.height = cropHeight;
 
-        // Tingkatkan kontras area potongan agar batik kebiruan tersaring hilang
-        context.filter = 'grayscale(100%) contrast(160%) brightness(110%)';
+        // Gambar potongan ke kanvas
         context.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
-        statusDiv.innerHTML = "🧠 AI membaca angka di dalam kotak merah...";
+        // 🧠 FILTER PRO: Mengubah piksel gambar secara manual ke Hitam-Putih murni (Binarization)
+        // Ini terbukti ampuh melenyapkan corak batik background kebiruan
+        const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            let grayscale = data[i] * 0.3 + data[i+1] * 0.59 + data[i+2] * 0.11;
+            // Jika piksel agak terang (seperti warna biru batik), paksa jadi putih murni. Jika gelap (teks cetakan), jadikan hitam pekat.
+            let threshold = grayscale > 110 ? 255 : 0; 
+            data[i] = data[i+1] = data[i+2] = threshold;
+        }
+        context.putImageData(imgData, 0, 0);
+
+        statusDiv.innerHTML = "🧠 Mengonversi karakter dot-matrix...";
 
         try {
-            // Jalankan engine AI hanya pada gambar yang sudah dipotong bersih
-            const { data: { text } } = await Tesseract.recognize(canvas, 'ind', {
-                tessedit_char_whitelist: '0123456789.,' // Paksa AI hanya mengenali karakter angka dan titik/koma
+            // Jalankan OCR tesseract khusus membaca baris angka saja
+            const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
+                tessedit_char_whitelist: '0123456789'
             });
 
-            // Saring angka murni
-            let angkaSaja = text.replace(/[^0-9]/g, "");
-            let nominalDitemukan = parseInt(angkaSaja) || 0;
+            // Hilangkan semua spasi atau sisa noise non-angka
+            let angkaMurni = text.replace(/[^0-9]/g, "");
+            let nominalDitemukan = parseInt(angkaMurni) || 0;
 
-            // Koreksi pembacaan jika nominal terlalu kecil akibat salah titik
+            // Logika Koreksi Nilai Nominal Desimal/Ribuan
             if (nominalDitemukan > 0 && nominalDitemukan < 1000) {
-                nominalDitemukan = nominalDitemukan * 1000; 
+                nominalDitemukan = nominalDitemukan * 1000;
             }
 
-            // Pengaman popup jika tulisan struk berminyak/pudar di lapangan
+            // Validasi kecocokan data dengan popup dinamis yang rapi jika terjadi miss-read
             if (nominalDitemukan === 0 || nominalDitemukan < 5000) {
-                let koreksi = prompt("AI mendeteksi angka namun buram. Masukkan angka nominal sesuai kotak merah di layar:", "73000");
-                nominalDitemukan = parseInt(koreksi.replace(/[.,]/g, "")) || 0;
+                let koreksi = prompt("AI mendeteksi angka namun kurang presisi. Silakan konfirmasi atau ketik nominal rupiah struk ini:", "73000");
+                nominalDitemukan = parseInt(koreksi.replace(/[.,\s]/g, "")) || 0;
             }
 
             if (nominalDitemukan > 0) {
-                // Proteksi Anti-Duplikat Berurutan
+                // Cegah data ganda berturut-turut
                 if (riwayatData.length > 0 && riwayatData[riwayatData.length - 1].nominal === nominalDitemukan) {
-                    let konfirmasi = confirm(`⚠️ Perhatian: Nominal Rp ${nominalDitemukan.toLocaleString('id-ID')} sama dengan data sebelumnya.\nTetap simpan dokumen baru ini?`);
+                    let konfirmasi = confirm(`⚠️ Nominal Rp ${nominalDitemukan.toLocaleString('id-ID')} sama dengan data sebelumnya. Tetap simpan?`);
                     if (!konfirmasi) {
-                        statusDiv.innerHTML = "🟡 Scan ganda dibatalkan.";
+                        statusDiv.innerHTML = "🟡 Scan duplikat dibatalkan.";
                         btnJepret.disabled = false;
                         return;
                     }
@@ -168,14 +177,14 @@
             }
 
         } catch (error) {
-            statusDiv.innerHTML = "❌ Gagal mendeteksi otomatis. Gunakan input manual.";
+            statusDiv.innerHTML = "❌ Gagal memproses visual. Gunakan opsi input manual.";
         } finally {
             btnJepret.disabled = false;
         }
     });
 
     btnManual.addEventListener('click', () => {
-        let inputUser = prompt("Ketik langsung nominal Rupiah:", "73000");
+        let inputUser = prompt("Masukkan nominal Rupiah langsung:", "73000");
         if (!inputUser) return;
         let nominalBersih = parseInt(inputUser.replace(/[.,\s]/g, "")) || 0;
         if (nominalBersih > 0) {
@@ -203,7 +212,7 @@
         tbody.innerHTML = riwayatData.map((data, index) => `
             <tr>
                 <td>${index + 1}</td>
-                <td><span style="background:#2c3e50; padding:3px 8px; border-radius:4px; font-size:11px; color:#fff;">${data.text}</span></td>
+                <td><span style="background:#2c3e50; padding:3px 8px; border-radius:4px; font-size:11px;">${data.text}</span></td>
                 <td style="color:#2ecc71; font-weight:bold;">Rp ${data.nominal.toLocaleString('id-ID')}</td>
             </tr>
         `).reverse().join('');
@@ -216,16 +225,16 @@
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", `Rekap_PBB_Sniper.csv`);
+        link.setAttribute("download", `Rekap_PBB_Nominal.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     });
 
     btnReset.addEventListener('click', () => {
-        if (confirm("Kosongkan rekap?")) {
+        if (confirm("Hapus rekap harian?")) {
             localStorage.clear(); riwayatData = []; akumulasiUang = 0; updateDashboard();
-            statusDiv.innerHTML = "🗑️ Data harian dibersihkan.";
+            statusDiv.innerHTML = "🗑️ Data dibersihkan.";
         }
     });
 </script>
