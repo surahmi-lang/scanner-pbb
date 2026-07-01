@@ -95,7 +95,7 @@
         .then(stream => { video.srcObject = stream; })
         .catch(err => { statusDiv.innerHTML = "Kamera gagal aktif."; });
 
-   btnJepret.addEventListener('click', async () => {
+    btnJepret.addEventListener('click', async () => {
         statusDiv.innerHTML = "📸 Mengunci gambar...";
         btnJepret.disabled = true;
 
@@ -148,36 +148,6 @@
             }
 
             if (nominalDitemukan > 0) {
-                if (riwayatData.length > 0 && riwayatData[riwayatData.length - 1].nominal === nominalDitemukan) {
-                    let konfirmasi = confirm(`⚠️ Nominal Rp ${nominalDitemukan.toLocaleString('id-ID')} sama dengan data sebelumnya. Tetap simpan?`);
-                    if (!konfirmasi) {
-                        statusDiv.innerHTML = "🟡 Scan duplikat dibatalkan.";
-                        btnJepret.disabled = false;
-                        return;
-                    }
-                }
-
-                simpanData("AI Scanner", nominalDitemukan);
-                statusDiv.innerHTML = "🟢 Berhasil disimpan!";
-            } else {
-                statusDiv.innerHTML = "🟡 Scan dibatalkan.";
-            }
-
-        } catch (error) {
-            statusDiv.innerHTML = "❌ Gagal memproses data visual.";
-        } finally {
-            btnJepret.disabled = false;
-        }
-    });
-
-            // Jika AI mendeteksi angka aneh/kosong akibat spasi renggang, berikan opsi koreksi otomatis yang akurat
-            if (nominalDitemukan === 0 || nominalDitemukan < 5000) {
-                let koreksi = prompt("AI mendeteksi teks tetapi ragu nominalnya. Silakan konfirmasi angka rupiah struk ini:", "73000");
-                nominalDitemukan = parseInt(koreksi.replace(/[.,\s]/g, "")) || 0;
-            }
-
-            if (nominalDitemukan > 0) {
-                // Proteksi Anti-Duplikat sebaris harian
                 if (riwayatData.length > 0 && riwayatData[riwayatData.length - 1].nominal === nominalDitemukan) {
                     let konfirmasi = confirm(`⚠️ Nominal Rp ${nominalDitemukan.toLocaleString('id-ID')} sama dengan data sebelumnya. Tetap simpan?`);
                     if (!konfirmasi) {
