@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner PBB Khusus SPPT</title>
+    <title>Scanner PBB - Kunci Unik NOP</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 15px; text-align: center; }
@@ -14,7 +14,7 @@
         .card h3 { margin: 0 0 5px 0; font-size: 14px; color: #aaa; }
         .card p { margin: 0; font-size: 20px; font-weight: bold; color: #2ecc71; }
         #video-container { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid #2ecc71; margin-bottom: 15px; }
-        video { width: 100%; display: block; filter: grayscale(100%) contrast(120%); }
+        video { width: 100%; display: block; filter: grayscale(100%) contrast(125%); }
         button { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: #2ecc71; color: #fff; }
         .btn-primary:active { background: #27ae60; }
@@ -30,8 +30,8 @@
 <body>
 
 <div class="container">
-    <h2>⚡ Lensa PBB SPPT v3.0</h2>
-    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Format Scan Disesuaikan untuk Struk Biru SPPT</p>
+    <h2>⚡ Lensa PBB (Kunci NOP)</h2>
+    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Validasi Duplikat Berbasis Nomor Objek Pajak</p>
 
     <div class="dashboard">
         <div class="card">
@@ -58,13 +58,13 @@
         <button class="btn-danger" style="padding: 10px; font-size: 14px;" id="btn-reset">🗑️ Reset Data</button>
     </div>
 
-    <h3 style="text-align: left; margin-top: 20px; font-size: 14px; color: #aaa;">Riwayat Setoran:</h3>
+    <h3 style="text-align: left; margin-top: 20px; font-size: 14px; color: #aaa;">Riwayat Setoran Valid:</h3>
     <table class="log-table">
         <thead>
             <tr>
                 <th>No</th>
-                <th>Metode</th>
-                <th>Nominal Rupiah</th>
+                <th>Nomor NOP</th>
+                <th>Nominal Pajak</th>
             </tr>
         </thead>
         <tbody id="log-body">
@@ -95,74 +95,110 @@
         .then(stream => { video.srcObject = stream; })
         .catch(err => { statusDiv.innerHTML = "Kamera gagal: " + err.message; });
 
-    // JALUR LALU LINTAS AI SCANNER
     btnJepret.addEventListener('click', async () => {
-        statusDiv.innerHTML = "📸 Mengunci struk PBB...";
+        statusDiv.innerHTML = "📸 Mengunci gambar...";
         btnJepret.disabled = true;
 
         const context = canvas.getContext('2d');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        context.filter = 'grayscale(100%) contrast(120%)';
+        context.filter = 'grayscale(100%) contrast(125%)';
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        statusDiv.innerHTML = "🧠 AI sedang melacak baris 'SPPT TAHUN/RP'...";
+        statusDiv.innerHTML = "🧠 AI mengekstrak NOP & Nominal Rupiah...";
 
         try {
             const { data: { text } } = await Tesseract.recognize(canvas, 'ind');
             let nominalDitemukan = 0;
+            let nopDitemukan = "";
             let barisTeks = text.split("\n");
             
             for (let baris of barisTeks) {
                 let bersih = baris.toUpperCase().replace(/\s+/g, '');
-                // Kecocokan algoritma baru mendeteksi kemunculan teks SPPT atau TAHUN
-                if (bersih.includes("SPPT") || bersih.includes("TAHUN") || bersih.includes("2025")) {
+                
+                // 1. Ekstraksi Lintas NOP
+                if (bersih.includes("NOP") || bersih.includes("73.")) {
+                    let matchNop = baris.match(/[0-9./-]{10,}/g);
+                    if (matchNop) {
+                        nopDitemukan = matchNop[0].replace(/[^0-9]/g, ""); // Ambil deretan angka murni NOP
+                    }
+                }
+                
+                // 2. Ekstraksi Nominal Rupiah
+                if (bersih.includes("SPPT") || bersih.includes("TAHUN") || bersih.includes("2025") || bersih.includes("2026")) {
                     let kumpulanAngka = baris.match(/\d[\d.,]*/g);
                     if (kumpulanAngka && kumpulanAngka.length >= 2) {
-                        // Ambil angka paling terakhir di baris tersebut (yaitu nominal rupiahnya)
                         let angkaBersih = kumpulanAngka[kumpulanAngka.length - 1].replace(/[.,]/g, "");
                         let hasilParses = parseInt(angkaBersih);
                         if (hasilParses > 1000) {
                             nominalDitemukan = hasilParses;
-                            break;
                         }
                     }
                 }
             }
 
-            // Jika AI bawaan HP tetap menyerah membaca polanya
+            // Fallback Cepat jika text meleset karena tinta tipis
+            if (nopDitemukan === "") {
+                nopDitemukan = prompt("AI gagal membaca NOP otomatis. Silakan ketik NOP (atau 4 digit terakhir):", "730610000800303200");
+                if(!nopDitemukan) { statusDiv.innerHTML = "🟡 Batalkan."; btnJepret.disabled = false; return; }
+            }
             if (nominalDitemukan === 0) {
-                let koreksi = prompt("Pola kertas berbatik terdeteksi. Sila ketik nominal Rupiah dari struk di layar:", "73000");
+                let koreksi = prompt("Nominal tidak terbaca. Ketik angka Rupiahnya:", "73000");
                 nominalDitemukan = parseInt(koreksi.replace(/[.,]/g, "")) || 0;
             }
 
-            if (nominalDitemukan > 0) {
-                simpanData("AI Scanner", nominalDitemukan);
+            // 🔥 VALIDASI CRITICAL: Cek duplikasi NOP di memori HP!
+            let sudahAda = riwayatData.some(item => item.nop === nopDitemukan);
+            if (sudahAda) {
+                alert(`⚠️ DITOLAK! Dokumen dengan NOP ${nopDitemukan} sudah pernah discan hari ini!`);
+                statusDiv.innerHTML = "❌ Gagal: Terdeteksi Dokumen Duplikat.";
+                btnJepret.disabled = false;
+                return;
+            }
+
+            if (nominalDitemukan > 0 && nopDitemukan !== "") {
+                simpanData(nopDitemukan, nominalDitemukan);
                 statusDiv.innerHTML = "🟢 Berhasil disimpan!";
             } else {
                 statusDiv.innerHTML = "🟡 Scan dibatalkan.";
             }
 
         } catch (error) {
-            statusDiv.innerHTML = "❌ Gagal. Sila klik tombol Input Manual!";
+            statusDiv.innerHTML = "❌ Error sistem lokal. Gunakan input manual!";
         } finally {
             btnJepret.disabled = false;
         }
     });
 
-    // JALUR MANUAL INSTAN
+    // MANUAL JALUR CEPAT
     btnManual.addEventListener('click', () => {
-        let inputUser = prompt("Masukkan nominal Rupiah langsung (Contoh: 73000):", "");
-        if (inputUser === null) return;
+        let inputNop = prompt("Masukkan nomor NOP:", "");
+        if (!inputNop) return;
+        
+        let sudahAda = riwayatData.some(item => item.nop === inputNop.replace(/[^0-9]/g, ""));
+        if (sudahAda) {
+            alert(`⚠️ DITOLAK! NOP ${inputNop} sudah terdaftar!`);
+            return;
+        }
+
+        let inputUser = prompt("Masukkan nominal Rupiah (Contoh: 73000):", "");
+        if (!inputUser) return;
         let nominalBersih = parseInt(inputUser.replace(/[.,\s]/g, "")) || 0;
+        
         if (nominalBersih > 0) {
-            simpanData("Manual", nominalBersih);
+            simpanData(inputNop.replace(/[^0-9]/g, ""), nominalBersih);
             statusDiv.innerHTML = "🟢 Berhasil disimpan secara manual!";
         }
     });
 
-    function simpanData(metode, nominal) {
-        riwayatData.push({ text: metode, nominal: nominal });
+    function simpanData(nomorNop, nominal) {
+        // Format NOP agar manis dilihat di tabel: 73.06...
+        let displayNop = nomorNop;
+        if(nomorNop.length >= 18) {
+            displayNop = `${nomorNop.substring(0,2)}.${nomorNop.substring(2,4)}.${nomorNop.substring(4,7)}...`;
+        }
+        
+        riwayatData.push({ nop: nomorNop, display: displayNop, nominal: nominal });
         akumulasiUang += nominal;
         localStorage.setItem('pbb_riwayat', JSON.stringify(riwayatData));
         localStorage.setItem('pbb_total', akumulasiUang);
@@ -180,7 +216,7 @@
         tbody.innerHTML = riwayatData.map((data, index) => `
             <tr>
                 <td>${index + 1}</td>
-                <td><span style="background:#333; padding:2px 6px; border-radius:4px; font-size:11px;">${data.text}</span></td>
+                <td style="font-family: monospace; font-size:14px; color:#3498db;">📋 ${data.display}</td>
                 <td style="color:#2ecc71; font-weight:bold;">Rp ${data.nominal.toLocaleString('id-ID')}</td>
             </tr>
         `).reverse().join('');
@@ -188,19 +224,19 @@
 
     btnDownload.addEventListener('click', () => {
         if(riwayatData.length === 0) { alert("Belum ada data!"); return; }
-        let csv = "No,Metode,Nominal\n";
-        riwayatData.forEach((d, i) => { csv += `${i+1},${d.text},${d.nominal}\n`; });
+        let csv = "No,Nomor NOP,Nominal Pajak\n";
+        riwayatData.forEach((d, i) => { csv += `${i+1},'${d.nop},${d.nominal}\n`; });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", `Rekap_PBB.csv`);
+        link.setAttribute("download", `Rekap_PBB_NOP.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     });
 
     btnReset.addEventListener('click', () => {
-        if (confirm("Reset data?")) {
+        if (confirm("Hapus seluruh rekap harian?")) {
             localStorage.clear(); riwayatData = []; akumulasiUang = 0; updateDashboard();
             statusDiv.innerHTML = "🗑️ Data dibersihkan.";
         }
