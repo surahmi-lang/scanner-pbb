@@ -1,210 +1,216 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Lensa Scanner PBB</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { background-color: #0f172a; color: #f8fafc; padding: 20px 10px; font-family: sans-serif; }
-    .box { max-width: 480px; margin: 0 auto; background: #1e293b; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    video { width: 100%; border-radius: 12px; border: 3px solid #10b981; background: #000; height: 240px; object-fit: cover; }
-    .btn-action { background: #10b981; color: white; font-weight: bold; font-size: 1.1rem; padding: 12px; border-radius: 12px; border: none; width: 100%; }
-    .card-total { background: #0f172a; border: 2px solid #eab308; border-radius: 12px; padding: 15px; margin-top: 15px; }
-    .tabel-box { max-height: 200px; overflow-y: auto; background: #0f172a; border-radius: 12px; padding: 5px; }
-    table { font-size: 0.85rem; color: #f8fafc !important; margin-bottom: 0 !important; }
-    th { position: sticky; top: 0; background: #1e293b !important; color: #3b82f6 !important; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lensa Scanner PBB Mandiri</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 15px; text-align: center; }
+        .container { max-width: 500px; margin: 0 auto; }
+        h2 { color: #2ecc71; margin-bottom: 5px; }
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .card { background: #1e1e1e; padding: 15px; border-radius: 10px; border: 1px solid #333; }
+        .card h3 { margin: 0 0 5px 0; font-size: 14px; color: #aaa; }
+        .card p { margin: 0; font-size: 20px; font-weight: bold; color: #2ecc71; }
+        #video-container { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid #2ecc71; margin-bottom: 15px; }
+        video { width: 100%; display: block; transform: scaleX(1); }
+        button { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: #2ecc71; color: #fff; }
+        .btn-primary:active { background: #27ae60; }
+        .btn-danger { background: #e74c3c; color: #fff; }
+        .btn-secondary { background: #34495e; color: #fff; font-size: 14px; padding: 10px; }
+        #status { font-style: italic; color: #3498db; margin: 10px 0; font-size: 14px; min-height: 20px; }
+        .log-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #1e1e1e; border-radius: 8px; overflow: hidden; font-size: 13px; }
+        .log-table th, .log-table td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
+        .log-table th { background: #2c3e50; color: #fff; }
+    </style>
 </head>
 <body>
 
-  <div class="box text-center">
-    <h4 class="fw-bold text-success mb-1">📸 AUTOMATIC SCANNER PBB</h4>
-    <p class="text-white-50 small mb-3">Otomatis Membaca Nominal & Cegah Duplikat</p>
+<div class="container">
+    <h2>⚡ Lensa PBB Standalone</h2>
+    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Mode Offline Mandiri - Bebas Drama Database</p>
 
-    <div class="mb-3 text-start">
-      <label class="form-label small fw-bold text-white-50">Pilih Nama Kolektor:</label>
-      <select id="txtKolektor" class="form-select bg-dark text-white border-secondary">
-        <option value="MUSA DG PILE">MUSA DG PILE</option>
-        <option value="SYAHRULLAH RAHMAN">SYAHRULLAH RAHMAN</option>
-        <option value="ABD AZIS">ABD AZIS</option>
-        <option value="MUH ARDI LONDONG">MUH ARDI LONDONG</option>
-        <option value="ABD MAJID PT JAJI">ABD MAJID PT JAJI</option>
-        <option value="ANDI ARSYAD">ANDI ARSYAD</option>
-      </select>
+    <div class="dashboard">
+        <div class="card">
+            <h3>Total Akumulasi</h3>
+            <p id="stat-total">Rp 0</p>
+        </div>
+        <div class="card">
+            <h3>Dokumen Terscan</h3>
+            <p id="stat-dokumen">0 Struk</p>
+        </div>
     </div>
 
-    <div class="position-relative mb-2">
-      <video id="webcam" autoplay playsinline></video>
-      <div id="statusKamera" class="position-absolute top-50 start-50 translate-middle text-white-50 small" style="display:none;">Kamera Mati</div>
+    <div id="video-container">
+        <video id="video" autoplay playsinline></video>
     </div>
 
-    <div class="d-flex gap-2 mb-3">
-      <button class="btn btn-sm btn-success w-50 fw-bold" onclick="mulaiKamera()">🟢 Mulai Kamera</button>
-      <button class="btn btn-sm btn-danger w-50 fw-bold" onclick="matikanKamera()">🔴 Matikan Kamera</button>
-    </div>
+    <div id="status">Kamera siap...</div>
 
-    <button class="btn-action shadow mb-3" id="btnKirim" onclick="jepretDanKirimOtomatis()">🚀 JEPRET & PROSES AI</button>
-
-    <div id="loader" style="display:none;" class="text-info my-2">
-      <div class="spinner-border spinner-border-sm" role="status"></div>
-      <small class="ms-2">AI sedang membaca struk & memeriksa duplikat...</small>
-    </div>
-
-    <div class="card-total text-start">
-      <div class="text-white-50 small fw-bold">💰 TOTAL AKUMULASI VALID:</div>
-      <div class="h3 fw-bold text-warning mt-1" id="valAkumulasi">Rp 0</div>
-    </div>
-
-    <div class="text-start mt-3">
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <label class="small fw-bold text-white-50">📋 Hasil Pembacaan Struk Hari Ini:</label>
-        <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:0.75rem" onclick="resetRiwayat()">Reset</button>
-      </div>
-      <div class="tabel-box">
-        <table class="table table-dark table-striped text-center">
-          <thead>
-            <tr>
-              <th>NOP</th>
-              <th>Kolektor</th>
-              <th>Nominal</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="bodyTabelRiwayat">
-            </tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-    // =========================================================================
-    // ⚠️ MASUKKAN URL WEB APP GOOGLE SHEETS (APPS SCRIPT) ANDA DI SINI
-    // =========================================================================
-    const URL_WEB_APP_GOOGLE = "https://script.google.com/macros/s/AKfycbzwSll3TrscSyhto7_ReBXjb1bpeJnZVZmoz7gwGGZjLxuoAUT6Me-_-lL5nqIaHFQvGQ/exec";
-
-    const video = document.getElementById('webcam');
-    var streamLokal = null;
-    var formatter = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
+    <button class="btn-primary" id="btn-jepret">🚀 JEPRET & PROSES AI</button>
     
-    window.onload = function() {
-      mulaiKamera();
-      perbaruiTampilanDanTotal();
-    };
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button class="btn-secondary" id="btn-download">💾 Unduh Laporan</button>
+        <button class="btn-danger" style="padding: 10px; font-size: 14px;" id="btn-reset">🗑️ Reset Data</button>
+    </div>
 
-    function mulaiKamera() {
-      if (streamLokal) matikanKamera();
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } })
-        .then(stream => { 
-          streamLokal = stream;
-          video.srcObject = stream; 
-          video.style.display = "block";
-          document.getElementById('statusKamera').style.display = "none";
-        })
-        .catch(err => { alert("Gagal akses kamera: " + err.toString()); });
-    }
+    <h3 style="text-align: left; margin-top: 20px; font-size: 14px; color: #aaa;">Riwayat Sesi Ini:</h3>
+    <table class="log-table">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Teks Terbaca</th>
+                <th>Nominal Rupiah</th>
+            </tr>
+        </thead>
+        <tbody id="log-body">
+            <tr>
+                <td colspan="3" style="text-align: center; color: #666;">Belum ada data yang discan hri ini.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
-    function matikanKamera() {
-      if (streamLokal) {
-        streamLokal.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
-        streamLokal = null;
-        video.style.display = "none";
-        document.getElementById('statusKamera').style.display = "block";
-      }
-    }
+<canvas id="canvas" style="display:none;"></canvas>
 
-    function jepretDanKirimOtomatis() {
-      if (!streamLokal) {
-        alert("Nyalakan kamera terlebih dahulu!");
-        return;
-      }
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const statusDiv = document.getElementById('status');
+    const btnJepret = document.getElementById('btn-jepret');
+    const btnDownload = document.getElementById('btn-download');
+    const btnReset = document.getElementById('btn-reset');
 
-      document.getElementById('btnKirim').disabled = true;
-      document.getElementById('loader').style.display = "block";
+    // State Aplikasi (Disimpan di Memori HP)
+    let riwayatData = JSON.parse(localStorage.getItem('pbb_riwayat')) || [];
+    let akumulasiUang = parseInt(localStorage.getItem('pbb_total')) || 0;
 
-      var canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-      var base64Data = canvas.toDataURL('image/jpeg', 0.8);
-      
-      var kolektor = document.getElementById('txtKolektor').value;
+    // Sinkronisasi Tampilan Awal Dashboard
+    updateDashboard();
 
-      fetch(URL_WEB_APP_GOOGLE, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ 'kolektor': kolektor, 'image': base64Data }).toString()
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('btnKirim').disabled = false;
-        document.getElementById('loader').style.display = "none";
+    // Jalankan Kamera Otomatis Penuh (Utamakan Kamera Belakang HP)
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => { statusDiv.innerHTML = "Gagal memuat kamera: " + err.message; });
 
-        var localData = JSON.parse(localStorage.getItem('riwayat_pbb_auto')) || [];
-        var totalRupiahLokal = parseInt(localStorage.getItem('total_rupiah_pbb_auto')) || 0;
+    // PROSES SCANNER INTELIJEN JEPRET & OCR
+    btnJepret.addEventListener('click', async () => {
+        statusDiv.innerHTML = "📸 Mengunci gambar...";
+        btnJepret.disabled = true;
 
-        if (data.success) {
-          localData.unshift({
-            nop: data.nop,
-            kolektor: kolektor,
-            nominal: data.nominalAngka,
-            status: "Sukses ✅"
-          });
-          totalRupiahLokal += parseInt(data.nominalAngka);
-          localStorage.setItem('total_rupiah_pbb_auto', totalRupiahLokal);
-        } else {
-          alert("Peringatan: " + data.message);
-          localData.unshift({
-            nop: data.nop || "Gagal",
-            kolektor: kolektor,
-            nominal: 0,
-            status: "Ditolak ❌"
-          });
+        // Ambil frame foto dari video kamera
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        statusDiv.innerHTML = "🧠 AI lokal sedang membedah teks struk (Mohon tunggu)...";
+
+        try {
+            // Jalankan Engine OCR Tesseract langsung di browser HP
+            const { data: { text } } = await Tesseract.recognize(canvas, 'ind', {
+                logger: m => { if(m.status === 'recognizing') statusDiv.innerHTML = `Membaca teks: ${Math.floor(m.progress * 100)}%`; }
+            });
+
+            // Ekstraksi Nominal Rupiah menggunakan Regex (Mencari nominal angka di sekitar teks pemicu)
+            let nominalDitemukan = 0;
+            let barisTeks = text.split("\n");
+            
+            for (let baris of barisTeks) {
+                let bersih = baris.toUpperCase();
+                if (bersih.includes("TOTAL") || bersih.includes("BAYAR") || bersih.includes("RUPIAH") || bersih.includes("RP")) {
+                    let angkaMatch = baris.match(/\d[\d.,]*/g);
+                    if (angkaMatch) {
+                        let angkaBersih = angkaMatch[angkaMatch.length - 1].replace(/[.,]/g, "");
+                        let hasilParses = parseInt(angkaBersih);
+                        if (hasilParses > 1000) { // Validasi jika nominal di atas seribu rupiah
+                            nominalDitemukan = hasilParses;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Jika AI Gagal mendeteksi teks angka rupiah yang valid
+            if (nominalDitemukan === 0) {
+                // Skenario Cadangan Aman: Minta input manual lewat popup cepat biar kerjaan tidak mandek
+                let koreksi = prompt("AI mendeteksi teks namun ragu angka nominalnya. Sila ketik manual nominal Rupiah struk ini:", "0");
+                nominalDitemukan = parseInt(koreksi.replace(/[.,]/g, "")) || 0;
+            }
+
+            if (nominalDitemukan > 0) {
+                // Simpan Data Baru ke State
+                let teksRingkas = text.substring(0, 30).replace(/\n/g, " ") + "...";
+                riwayatData.push({ text: teksRingkas, nominal: nominalDitemukan });
+                akumulasiUang += nominalDitemukan;
+
+                // Amankan ke memori HP biar kalau halaman ketutup data tidak hilang
+                localStorage.setItem('pbb_riwayat', JSON.stringify(riwayatData));
+                localStorage.setItem('pbb_total', akumulasiUang);
+
+                updateDashboard();
+                statusDiv.innerHTML = "🟢 Berhasil ditambahkan ke akumulasi!";
+            } else {
+                statusDiv.innerHTML = "🟡 Scan dibatalkan / nominal Rp 0.";
+            }
+
+        } catch (error) {
+            statusDiv.innerHTML = "❌ Gagal memproses: " + error.message;
+        } finally {
+            btnJepret.disabled = false;
+        }
+    });
+
+    // FUNGSI UPDATE DASHBOARD & TABEL RIWAYAT
+    function updateDashboard() {
+        document.getElementById('stat-total').innerHTML = "Rp " + akumulasiUang.toLocaleString('id-ID');
+        document.getElementById('stat-dokumen').innerHTML = riwayatData.length + " Struk";
+
+        const tbody = document.getElementById('log-body');
+        if (riwayatData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #666;">Belum ada data yang discan hari ini.</td></tr>`;
+            return;
         }
 
-        localStorage.setItem('riwayat_pbb_auto', JSON.stringify(localData));
-        perbaruiTampilanDanTotal();
-      })
-      .catch(err => {
-        alert("Koneksi terputus atau link makro salah: " + err.toString());
-        document.getElementById('btnKirim').disabled = false;
-        document.getElementById('loader').style.display = "none";
-      });
+        tbody.innerHTML = riwayatData.map((data, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${data.text}</td>
+                <td style="color:#2ecc71; font-weight:bold;">Rp ${data.nominal.toLocaleString('id-ID')}</td>
+            </tr>
+        `).reverse().join(''); // Riwayat terbaru akan muncul di baris paling atas tabel
     }
 
-    function perbaruiTampilanDanTotal() {
-      var localData = JSON.parse(localStorage.getItem('riwayat_pbb_auto')) || [];
-      var totalRupiahLokal = parseInt(localStorage.getItem('total_rupiah_pbb_auto')) || 0;
-
-      document.getElementById('valAkumulasi').innerText = formatter.format(totalRupiahLokal);
-
-      var htmlTabel = "";
-      if (localData.length === 0) {
-        htmlTabel = `<tr><td colspan="4" class="text-white-50 text-center small py-3">Belum ada data scan.</td></tr>`;
-      } else {
-        localData.forEach(item => {
-          var badgeClass = item.status.includes("Sukses") ? "bg-success" : "bg-danger";
-          htmlTabel += `<tr>
-            <td>${item.nop}</td>
-            <td class="text-start fw-bold text-info">${item.kolektor}</td>
-            <td class="text-warning fw-bold">${formatter.format(item.nominal)}</td>
-            <td><span class="badge ${badgeClass}">${item.status}</span></td>
-          </tr>`;
+    // DOWNLOAD LAPORAN FORMAT CSV (Bisa langsung dibuka di Excel Komputer)
+    btnDownload.addEventListener('click', () => {
+        if(riwayatData.length === 0) { alert("Belum ada data untuk diunduh!"); return; }
+        
+        let barisCsv = "No,Teks Ringkas,Nominal Rupiah\n";
+        riwayatData.forEach((d, i) => {
+            barisCsv += `${i+1},"${d.text.replace(/"/g, '""')}",${d.nominal}\n`;
         });
-      }
-      document.getElementById('bodyTabelRiwayat').innerHTML = htmlTabel;
-    }
+        
+        const blob = new Blob([barisCsv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", `Rekap_Scan_PBB_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
 
-    function resetRiwayat() {
-      if(confirm("Hapus tampilan log layar?")) {
-        localStorage.removeItem('riwayat_pbb_auto');
-        localStorage.removeItem('total_rupiah_pbb_auto');
-        perbaruiTampilanDanTotal();
-      }
-    }
-  </script>
+    // RESET TOTAL DATA
+    btnReset.addEventListener('click', () => {
+        if (confirm("Apakah Anda yakin ingin menghapus seluruh akumulasi data scan hari ini?")) {
+            localStorage.clear();
+            riwayatData = [];
+            akumulasiUang = 0;
+            updateDashboard();
+            statusDiv.innerHTML = "🗑️ Data telah dibersihkan.";
+        }
+    });
+</script>
 </body>
 </html>
