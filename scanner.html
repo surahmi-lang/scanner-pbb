@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner PBB SPPT - Akurasi Tinggi</title>
+    <title>Scanner PBB - Presisi Baris</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 15px; text-align: center; }
@@ -13,12 +13,8 @@
         .card { background: #1e1e1e; padding: 15px; border-radius: 10px; border: 1px solid #333; }
         .card h3 { margin: 0 0 5px 0; font-size: 14px; color: #aaa; }
         .card p { margin: 0; font-size: 20px; font-weight: bold; color: #2ecc71; }
-        
         #video-container { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid #2ecc71; margin-bottom: 15px; }
-        video { width: 100%; display: block; }
-        .radar-box { position: absolute; right: 10px; bottom: 15px; width: 45%; height: 25%; border: 3px dashed #e74c3c; border-radius: 6px; pointer-events: none; box-shadow: 0 0 10px rgba(231,76,60,0.5); }
-        .radar-label { position: absolute; right: 10px; bottom: 43%; color: #e74c3c; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
-
+        video { width: 100%; display: block; filter: grayscale(100%) contrast(140%) brightness(95%); }
         button { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: #2ecc71; color: #fff; }
         .btn-primary:active { background: #27ae60; }
@@ -34,8 +30,8 @@
 <body>
 
 <div class="container">
-    <h2>⚡ Lensa PBB SPPT Sniper v4.2</h2>
-    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Peningkatan Akurasi Pembacaan Karakter Dot-Matrix</p>
+    <h2>⚡ Lensa PBB Presisi Tinggi</h2>
+    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Penyaringan Berbasis Pemindaian Baris SPPT</p>
 
     <div class="dashboard">
         <div class="card">
@@ -50,13 +46,11 @@
 
     <div id="video-container">
         <video id="video" autoplay playsinline></video>
-        <div class="radar-label">Posisikan Angka Nominal Di Sini 👇</div>
-        <div class="radar-box"></div>
     </div>
 
-    <div id="status">Sejajarkan nilai rupiah di dalam kotak merah putus-putus...</div>
+    <div id="status">Kamera siap. Posisikan satu struk penuh di layar...</div>
 
-    <button class="btn-primary" id="btn-jepret">🚀 SCAN NOMINAL SEKARANG</button>
+    <button class="btn-primary" id="btn-jepret">🚀 JEPRET & SCAN NOMINAL</button>
     <button class="btn-warning" style="padding: 10px; font-size: 14px;" id="btn-manual">✏️ INPUT MANUAL CEPAT</button>
     
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
@@ -64,13 +58,13 @@
         <button class="btn-danger" style="padding: 10px; font-size: 14px;" id="btn-reset">🗑️ Reset Data</button>
     </div>
 
-    <h3 style="text-align: left; margin-top: 20px; font-size: 14px; color: #aaa;">Riwayat Setoran Valid:</h3>
+    <h3 style="text-align: left; margin-top: 20px; font-size: 14px; color: #aaa;">Riwayat Setoran:</h3>
     <table class="log-table">
         <thead>
             <tr>
                 <th>No</th>
-                <th>Metode Catat</th>
-                <th>Nominal Rupiah</th>
+                <th>Metode</th>
+                <th>Nominal Pajak</th>
             </tr>
         </thead>
         <tbody id="log-body">
@@ -97,70 +91,60 @@
 
     updateDashboard();
 
-    navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, 
-        audio: false 
-    })
-    .then(stream => { video.srcObject = stream; })
-    .catch(err => { statusDiv.innerHTML = "Gagal memuat kamera."; });
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => { statusDiv.innerHTML = "Kamera gagal aktif."; });
 
     btnJepret.addEventListener('click', async () => {
-        statusDiv.innerHTML = "📸 Memproses gambar...";
+        statusDiv.innerHTML = "📸 Mengunci gambar...";
         btnJepret.disabled = true;
 
         const context = canvas.getContext('2d');
-        const vWidth = video.videoWidth;
-        const vHeight = video.videoHeight;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Filter kontras agar teks dot-matrix hitam terlihat menonjol dari kertas batik biru
+        context.filter = 'grayscale(100%) contrast(150%) brightness(100%)';
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Ambil porsi potongan sudut kanan bawah tempat nominal berada
-        const cropWidth = vWidth * 0.45;  
-        const cropHeight = vHeight * 0.25; 
-        const cropX = vWidth - cropWidth - 10;
-        const cropY = vHeight - cropHeight - 15;
-
-        canvas.width = cropWidth;
-        canvas.height = cropHeight;
-
-        // Gambar potongan ke kanvas
-        context.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-
-        // 🧠 FILTER PRO: Mengubah piksel gambar secara manual ke Hitam-Putih murni (Binarization)
-        // Ini terbukti ampuh melenyapkan corak batik background kebiruan
-        const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imgData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            let grayscale = data[i] * 0.3 + data[i+1] * 0.59 + data[i+2] * 0.11;
-            // Jika piksel agak terang (seperti warna biru batik), paksa jadi putih murni. Jika gelap (teks cetakan), jadikan hitam pekat.
-            let threshold = grayscale > 110 ? 255 : 0; 
-            data[i] = data[i+1] = data[i+2] = threshold;
-        }
-        context.putImageData(imgData, 0, 0);
-
-        statusDiv.innerHTML = "🧠 Mengonversi karakter dot-matrix...";
+        statusDiv.innerHTML = "🧠 AI menyaring baris nominal...";
 
         try {
-            // Jalankan OCR tesseract khusus membaca baris angka saja
-            const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
-                tessedit_char_whitelist: '0123456789'
-            });
-
-            // Hilangkan semua spasi atau sisa noise non-angka
-            let angkaMurni = text.replace(/[^0-9]/g, "");
-            let nominalDitemukan = parseInt(angkaMurni) || 0;
-
-            // Logika Koreksi Nilai Nominal Desimal/Ribuan
-            if (nominalDitemukan > 0 && nominalDitemukan < 1000) {
-                nominalDitemukan = nominalDitemukan * 1000;
+            // Membaca teks secara keseluruhan untuk mencari letak kata kunci "SPPT"
+            const { data: { text } } = await Tesseract.recognize(canvas, 'ind+eng');
+            let nominalDitemukan = 0;
+            let barisTeks = text.split("\n");
+            
+            for (let baris of barisTeks) {
+                let bersih = baris.toUpperCase().replace(/\s+/g, '');
+                
+                // 🔥 LOGIKA BARU: Jika baris mengandung kata kunci penanda nominal rupiah
+                if (bersih.includes("SPPT") || bersih.includes("TAHUN") || bersih.includes("RP")) {
+                    // Ambil semua kumpulan angka yang ada di baris tersebut
+                    let kumpulanAngka = baris.match(/\d[\d.,]*/g);
+                    
+                    if (kumpulanAngka && kumpulanAngka.length >= 1) {
+                        // Ambil angka yang berada paling kanan/paling akhir di baris tersebut
+                        let angkaPalingKanan = kumpulanAngka[kumpulanAngka.length - 1];
+                        let angkaBersih = angkaPalingKanan.replace(/[.,\s]/g, "");
+                        let hasilParse = parseInt(angkaBersih);
+                        
+                        if (hasilParse > 1000) {
+                            nominalDitemukan = hasilParse;
+                            break;
+                        }
+                    }
+                }
             }
 
-            // Validasi kecocokan data dengan popup dinamis yang rapi jika terjadi miss-read
+            // Jika AI mendeteksi angka aneh/kosong akibat spasi renggang, berikan opsi koreksi otomatis yang akurat
             if (nominalDitemukan === 0 || nominalDitemukan < 5000) {
-                let koreksi = prompt("AI mendeteksi angka namun kurang presisi. Silakan konfirmasi atau ketik nominal rupiah struk ini:", "73000");
+                let koreksi = prompt("AI mendeteksi teks tetapi ragu nominalnya. Silakan konfirmasi angka rupiah struk ini:", "73000");
                 nominalDitemukan = parseInt(koreksi.replace(/[.,\s]/g, "")) || 0;
             }
 
             if (nominalDitemukan > 0) {
-                // Cegah data ganda berturut-turut
+                // Proteksi Anti-Duplikat sebaris harian
                 if (riwayatData.length > 0 && riwayatData[riwayatData.length - 1].nominal === nominalDitemukan) {
                     let konfirmasi = confirm(`⚠️ Nominal Rp ${nominalDitemukan.toLocaleString('id-ID')} sama dengan data sebelumnya. Tetap simpan?`);
                     if (!konfirmasi) {
@@ -170,14 +154,14 @@
                     }
                 }
 
-                simpanData("AI Sniper", nominalDitemukan);
+                simpanData("AI Scanner", nominalDitemukan);
                 statusDiv.innerHTML = "🟢 Berhasil disimpan!";
             } else {
                 statusDiv.innerHTML = "🟡 Scan dibatalkan.";
             }
 
         } catch (error) {
-            statusDiv.innerHTML = "❌ Gagal memproses visual. Gunakan opsi input manual.";
+            statusDiv.innerHTML = "❌ Gagal memproses data visual.";
         } finally {
             btnJepret.disabled = false;
         }
@@ -225,14 +209,14 @@
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", `Rekap_PBB_Nominal.csv`);
+        link.setAttribute("download", `Rekap_PBB.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     });
 
     btnReset.addEventListener('click', () => {
-        if (confirm("Hapus rekap harian?")) {
+        if (confirm("Kosongkan rekap?")) {
             localStorage.clear(); riwayatData = []; akumulasiUang = 0; updateDashboard();
             statusDiv.innerHTML = "🗑️ Data dibersihkan.";
         }
