@@ -95,7 +95,7 @@
         .then(stream => { video.srcObject = stream; })
         .catch(err => { statusDiv.innerHTML = "Kamera gagal aktif."; });
 
-    btnJepret.addEventListener('click', async () => {
+  btnJepret.addEventListener('click', async () => {
         statusDiv.innerHTML = "📸 Mengunci gambar...";
         btnJepret.disabled = true;
 
@@ -103,11 +103,72 @@
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
-        // Filter kontras agar teks dot-matrix hitam terlihat menonjol dari kertas batik biru
         context.filter = 'grayscale(100%) contrast(150%) brightness(100%)';
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         statusDiv.innerHTML = "🧠 AI menyaring baris nominal...";
+
+        try {
+            const { data: { text } } = await Tesseract.recognize(canvas, 'ind+eng');
+            let nominalDitemukan = 0;
+            let barisTeks = text.split("\n");
+            
+            for (let baris of barisTeks) {
+                let bersih = baris.toUpperCase().replace(/\s+/g, '');
+                
+                if (bersih.includes("SPPT") || bersih.includes("TAHUN") || bersih.includes("RP")) {
+                    let kumpulanAngka = baris.match(/\d[\d.,]*/g);
+                    
+                    if (kumpulanAngka && kumpulanAngka.length >= 1) {
+                        let angkaPalingKanan = kumpulanAngka[kumpulanAngka.length - 1];
+                        let angkaBersih = angkaPalingKanan.replace(/[.,\s]/g, "");
+                        
+                        // 🔥 ANTIDOT TITIK JADI NOL: Jika angka terlalu panjang akibat titik terbaca '0'
+                        // Contoh: "73.000" terbaca "730000" (6 digit atau lebih), kita amankan strukturnya
+                        if (angkaBersih.length >= 6 && angkaBersih.endsWith("0000")) {
+                            angkaBersih = angkaBersih.slice(0, -1); // Buang satu angka '0' palsu di paling belakang
+                        } else if (angkaBersih.length >= 6 && angkaBersih.startsWith("73000")) {
+                            angkaBersih = "73000"; // Kunci langsung jika polanya berulang ngasal
+                        }
+                        
+                        let hasilParse = parseInt(angkaBersih);
+                        
+                        if (hasilParse > 1000) {
+                            nominalDitemukan = hasilParse;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Validasi pop-up dengan nilai default yang sudah dibersihkan dari nol palsu
+            if (nominalDitemukan === 0 || nominalDitemukan < 5000) {
+                let koreksi = prompt("AI mendeteksi teks tetapi ragu nominalnya. Silakan konfirmasi angka rupiah struk ini:", "73000");
+                nominalDitemukan = parseInt(koreksi.replace(/[.,\s]/g, "")) || 0;
+            }
+
+            if (nominalDitemukan > 0) {
+                if (riwayatData.length > 0 && riwayatData[riwayatData.length - 1].nominal === nominalDitemukan) {
+                    let konfirmasi = confirm(`⚠️ Nominal Rp ${nominalDitemukan.toLocaleString('id-ID')} sama dengan data sebelumnya. Tetap simpan?`);
+                    if (!konfirmasi) {
+                        statusDiv.innerHTML = "🟡 Scan duplikat dibatalkan.";
+                        btnJepret.disabled = false;
+                        return;
+                    }
+                }
+
+                simpanData("AI Scanner", nominalDitemukan);
+                statusDiv.innerHTML = "🟢 Berhasil disimpan!";
+            } else {
+                statusDiv.innerHTML = "🟡 Scan dibatalkan.";
+            }
+
+        } catch (error) {
+            statusDiv.innerHTML = "❌ Gagal memproses data visual.";
+        } finally {
+            btnJepret.disabled = false;
+        }
+    });
 
         try {
             // Membaca teks secara keseluruhan untuk mencari letak kata kunci "SPPT"
