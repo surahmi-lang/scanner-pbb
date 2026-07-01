@@ -3,76 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner PBB - Presisi Baris</title>
+    <title>⚡ Lensa PBB - Crop Frame</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 15px; text-align: center; }
-        .container { max-width: 500px; margin: 0 auto; }
-        h2 { color: #2ecc71; margin-bottom: 5px; }
-        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .card { background: #1e1e1e; padding: 15px; border-radius: 10px; border: 1px solid #333; }
-        .card h3 { margin: 0 0 5px 0; font-size: 14px; color: #aaa; }
-        .card p { margin: 0; font-size: 20px; font-weight: bold; color: #2ecc71; }
-        #video-container { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid #2ecc71; margin-bottom: 15px; }
-        video { width: 100%; display: block; filter: grayscale(100%) contrast(140%) brightness(95%); }
-        button { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: #2ecc71; color: #fff; }
-        .btn-primary:active { background: #27ae60; }
-        .btn-warning { background: #f39c12; color: #fff; }
-        .btn-danger { background: #e74c3c; color: #fff; }
-        .btn-secondary { background: #34495e; color: #fff; font-size: 14px; padding: 10px; }
-        #status { font-style: italic; color: #3498db; margin: 10px 0; font-size: 14px; min-height: 20px; }
-        .log-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #1e1e1e; border-radius: 8px; overflow: hidden; font-size: 13px; }
-        .log-table th, .log-table td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
-        .log-table th { background: #2c3e50; color: #fff; }
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: rgba(20, 28, 47, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-green: #00e676;
+            --accent-blue: #29b6f6;
+            --accent-orange: #ff9100;
+            --accent-red: #ff5252;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container { width: 100%; max-width: 440px; }
+        header { text-align: left; margin-bottom: 25px; }
+        h2 { font-size: 24px; font-weight: 800; margin: 0; color: #fff; }
+        header p { margin: 4px 0 0 0; font-size: 12px; color: var(--accent-green); font-weight: 600; text-transform: uppercase; }
+
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .card { background: var(--bg-card); padding: 16px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .card h3 { margin: 0 0 6px 0; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
+        .card p { margin: 0; font-size: 20px; font-weight: 700; }
+        #stat-total { color: var(--accent-green); }
+
+        /* JENDELA KAMERA DENGAN OVERLAY KOTAK BIDIK */
+        #video-container {
+            position: relative;
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #000;
+            border: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+        video { width: 100%; display: block; }
+        
+        /* Lapisan Gelap di luar kotak target */
+        .camera-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+        /* Kotak Target Potong di Tengah Layar */
+        .crop-frame {
+            width: 70%; height: 60px;
+            border: 3px solid var(--accent-green);
+            border-radius: 12px;
+            box-shadow: 0 0 0 9999px rgba(11, 15, 25, 0.6); /* Efek menggelapkan luar kotak */
+            position: relative;
+        }
+        .crop-label {
+            position: absolute; top: -25px; left: 0; width: 100%;
+            text-align: center; color: var(--accent-green); font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        #status {
+            background: rgba(41, 182, 246, 0.1); color: var(--accent-blue);
+            padding: 12px; border-radius: 12px; font-size: 13px; margin-bottom: 20px;
+            border: 1px solid rgba(41, 182, 246, 0.2);
+        }
+
+        .action-buttons { display: flex; flex-direction: column; gap: 10px; }
+        button { width: 100%; padding: 16px; font-size: 15px; font-weight: 700; border-radius: 14px; border: none; cursor: pointer; }
+        .btn-primary { background: var(--accent-green); color: #000; }
+        .btn-warning { background: rgba(255, 145, 0, 0.1); color: var(--accent-orange); border: 1px solid rgba(255, 145, 0, 0.2); }
+        .secondary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn-danger { background: rgba(255, 82, 82, 0.1); color: var(--accent-red); border: 1px solid rgba(255, 82, 82, 0.2); }
+
+        .log-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); font-size: 14px; margin-top: 15px; }
+        .log-table th, .log-table td { padding: 14px; text-align: left; }
+        .log-table th { background: rgba(255,255,255,0.02); color: var(--text-secondary); font-size: 12px; border-bottom: 1px solid var(--border-color); }
+        .badge { background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 6px; font-size: 11px; }
+
+        /* MODAL CUSTOM POPUP */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5, 8, 15, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.2s; padding: 20px; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-box { background: #141c2f; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 340px; border-radius: 20px; padding: 24px; }
+        .modal-box input { width: 100%; padding: 14px; background: #0b0f19; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 20px; font-weight: 700; text-align: center; box-sizing: border-box; margin-bottom: 20px; }
+        .modal-flex { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>⚡ Lensa PBB Presisi Tinggi</h2>
-    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Penyaringan Berbasis Pemindaian Baris SPPT</p>
+    <header>
+        <p>Mode Potong Fokus Angka</p>
+        <h2>Lensa Scanner PBB</h2>
+    </header>
 
     <div class="dashboard">
         <div class="card">
-            <h3>Total Akumulasi</h3>
+            <h3>Total Terkumpul</h3>
             <p id="stat-total">Rp 0</p>
         </div>
         <div class="card">
-            <h3>Dokumen Terscan</h3>
+            <h3>Jumlah Struk</h3>
             <p id="stat-dokumen">0 Struk</p>
         </div>
     </div>
 
     <div id="video-container">
         <video id="video" autoplay playsinline></video>
+        <div class="camera-overlay">
+            <div class="crop-frame">
+                <div class="crop-label">Paskan Angka Rupiah Di Sini</div>
+            </div>
+        </div>
     </div>
 
-    <div id="status">Kamera siap. Posisikan satu struk penuh di layar...</div>
+    <div id="status font-style: italic;">Posisikan HANYA angka nominal di dalam kotak hijau...</div>
 
-    <button class="btn-primary" id="btn-jepret">🚀 JEPRET & SCAN NOMINAL</button>
-    <button class="btn-warning" style="padding: 10px; font-size: 14px;" id="btn-manual">✏️ INPUT MANUAL CEPAT</button>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
-        <button class="btn-secondary" id="btn-download">💾 Unduh Laporan</button>
-        <button class="btn-danger" style="padding: 10px; font-size: 14px;" id="btn-reset">🗑️ Reset Data</button>
+    <div class="action-buttons">
+        <button class="btn-primary" id="btn-jepret">📸 POTONG & AMBIL NILAI</button>
+        <button class="btn-warning" id="btn-manual">✏️ INPUT MANUAL</button>
+        <div class="secondary-grid">
+            <button class="btn-secondary" id="btn-download">💾 Unduh CSV</button>
+            <button class="btn-danger" id="btn-reset">🗑️ Reset</button>
+        </div>
     </div>
 
-    <h3 style="text-align: left; margin-top: 20px; font-size: 14px; color: #aaa;">Riwayat Setoran:</h3>
     <table class="log-table">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Metode</th>
-                <th>Nominal Pajak</th>
-            </tr>
-        </thead>
+        <thead><tr><th>No</th><th>Metode</th><th>Nominal</th></tr></thead>
         <tbody id="log-body">
-            <tr>
-                <td colspan="3" style="text-align: center; color: #666;">Belum ada data.</td>
-            </tr>
+            <tr><td colspan="3" style="text-align: center; color: var(--text-secondary);">Belum ada data.</td></tr>
         </tbody>
     </table>
+</div>
+
+<div class="modal-overlay" id="custom-modal">
+    <div class="modal-box">
+        <h3 style="margin:0 0 8px 0;">Konfirmasi Angka</h3>
+        <p style="margin:0 0 16px 0; font-size:13px; color:var(--text-secondary);">Pastikan angka nominal yang terpotong sudah sesuai:</p>
+        <input type="number" id="modal-input">
+        <div class="modal-flex">
+            <button class="btn-secondary" style="margin:0; padding:12px;" id="modal-cancel">Batal</button>
+            <button class="btn-primary" style="margin:0; padding:12px;" id="modal-confirm">Simpan</button>
+        </div>
+    </div>
 </div>
 
 <canvas id="canvas" style="display:none;"></canvas>
@@ -86,127 +168,105 @@
     const btnDownload = document.getElementById('btn-download');
     const btnReset = document.getElementById('btn-reset');
 
+    const modal = document.getElementById('custom-modal');
+    const modalInput = document.getElementById('modal-input');
+    const modalConfirm = document.getElementById('modal-confirm');
+    const modalCancel = document.getElementById('modal-cancel');
+
     let riwayatData = JSON.parse(localStorage.getItem('pbb_riwayat')) || [];
     let akumulasiUang = parseInt(localStorage.getItem('pbb_total')) || 0;
+    let currentCallback = null;
 
     updateDashboard();
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
         .then(stream => { video.srcObject = stream; })
-        .catch(err => { statusDiv.innerHTML = "Kamera gagal aktif."; });
+        .catch(err => { alert("Kamera bermasalah."); });
+
+    function bukaModal(valDefault, callback) {
+        modalInput.value = valDefault;
+        modal.classList.add('active');
+        modalInput.focus();
+        currentCallback = callback;
+    }
+
+    modalCancel.addEventListener('click', () => { modal.classList.remove('active'); btnJepret.disabled = false; });
+    modalConfirm.addEventListener('click', () => { let v = parseInt(modalInput.value) || 0; modal.classList.remove('active'); if(currentCallback) currentCallback(v); });
 
     btnJepret.addEventListener('click', async () => {
-        statusDiv.innerHTML = "📸 Mengunci gambar...";
         btnJepret.disabled = true;
-
         const context = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
         
-        context.filter = 'grayscale(100%) contrast(150%) brightness(100%)';
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Ukuran real video dari sensor kamera
+        const vWidth = video.videoWidth;
+        const vHeight = video.videoHeight;
 
-        statusDiv.innerHTML = "🧠 AI menyaring baris nominal...";
+        // Menghitung koordinat potong presisi sesuai dimensi kotak hijau di layar HP
+        const cropWidth = vWidth * 0.70;
+        const cropHeight = (vHeight / video.offsetHeight) * 60; // Konversi tinggi 60px ke skala video asli
+        const cropX = (vWidth - cropWidth) / 2;
+        const cropY = (vHeight - cropHeight) / 2;
+
+        canvas.width = cropWidth;
+        canvas.height = cropHeight;
+
+        // Filter biner tajam khusus area nominal agar bersih total dari corak kertas batik
+        context.filter = 'grayscale(100%) contrast(170%) brightness(100%)';
+        context.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
         try {
-            const { data: { text } } = await Tesseract.recognize(canvas, 'ind+eng');
-            let nominalDitemukan = 0;
-            let barisTeks = text.split("\n");
+            // Minta Tesseract membaca potongan gambar murni (hanya berisi angka)
+            const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
+                tessedit_char_whitelist: '0123456789'
+            });
+
+            let angkaBersih = text.replace(/[^0-9]/g, "");
             
-            for (let baris of barisTeks) {
-                let bersih = baris.toUpperCase().replace(/\s+/g, '');
-                
-                if (bersih.includes("SPPT") || bersih.includes("TAHUN") || bersih.includes("RP")) {
-                    let kumpulanAngka = baris.match(/\d[\d.,]*/g);
-                    
-                    if (kumpulanAngka && kumpulanAngka.length >= 1) {
-                        let angkaPalingKanan = kumpulanAngka[kumpulanAngka.length - 1];
-                        let angkaBersih = angkaPalingKanan.replace(/[.,\s]/g, "");
-                        
-                        // 🔥 ANTIDOT TITIK JADI NOL: Jika angka terlalu panjang akibat titik terbaca '0'
-                        // Contoh: "73.000" terbaca "730000" (6 digit atau lebih), kita amankan strukturnya
-                        if (angkaBersih.length >= 6 && angkaBersih.endsWith("0000")) {
-                            angkaBersih = angkaBersih.slice(0, -1); // Buang satu angka '0' palsu di paling belakang
-                        } else if (angkaBersih.length >= 6 && angkaBersih.startsWith("73000")) {
-                            angkaBersih = "73000"; // Kunci langsung jika polanya berulang ngasal
-                        }
-                        
-                        let hasilParse = parseInt(angkaBersih);
-                        
-                        if (hasilParse > 1000) {
-                            nominalDitemukan = hasilParse;
-                            break;
+            // Aturan penjinak titik pembacaan nol palsu
+            if (angkaBersih.length >= 6 && angkaBersih.endsWith("0000")) {
+                angkaBersih = angkaBersih.slice(0, -1);
+            }
+
+            let nominalDitemukan = parseInt(angkaBersih) || 0;
+            if (nominalDitemukan > 0 && nominalDitemukan < 1000) nominalDitemukan *= 1000;
+
+            // Buka modal pengecekan hasil potong
+            bukaModal(nominalDitemukan > 0 ? nominalDitemukan : "73000", function(hasilAkhir) {
+                if (hasilAkhir > 0) {
+                    if (riwayatData.length > 0 && riwayatData[riwayatData.length - 1].nominal === hasilAkhir) {
+                        if (!confirm("Nominal sama dengan data sebelumnya. Tetap simpan?")) {
+                            btnJepret.disabled = false;
+                            return;
                         }
                     }
+                    riwayatData.push({ text: "AI Crop", nominal: hasilAkhir });
+                    akumulasiUang += hasilAkhir;
+                    localStorage.setItem('pbb_riwayat', JSON.stringify(riwayatData));
+                    localStorage.setItem('pbb_total', akumulasiUang);
+                    updateDashboard();
                 }
-            }
+                btnJepret.disabled = false;
+            });
 
-            // Validasi pop-up dengan nilai default yang sudah dibersihkan dari nol palsu
-            if (nominalDitemukan === 0 || nominalDitemukan < 5000) {
-                let koreksi = prompt("AI mendeteksi teks tetapi ragu nominalnya. Silakan konfirmasi angka rupiah struk ini:", "73000");
-                nominalDitemukan = parseInt(koreksi.replace(/[.,\s]/g, "")) || 0;
-            }
-
-            if (nominalDitemukan > 0) {
-                if (riwayatData.length > 0 && riwayatData[riwayatData.length - 1].nominal === nominalDitemukan) {
-                    let konfirmasi = confirm(`⚠️ Nominal Rp ${nominalDitemukan.toLocaleString('id-ID')} sama dengan data sebelumnya. Tetap simpan?`);
-                    if (!konfirmasi) {
-                        statusDiv.innerHTML = "🟡 Scan duplikat dibatalkan.";
-                        btnJepret.disabled = false;
-                        return;
-                    }
-                }
-
-                simpanData("AI Scanner", nominalDitemukan);
-                statusDiv.innerHTML = "🟢 Berhasil disimpan!";
-            } else {
-                statusDiv.innerHTML = "🟡 Scan dibatalkan.";
-            }
-
-        } catch (error) {
-            statusDiv.innerHTML = "❌ Gagal memproses data visual.";
-        } finally {
-            btnJepret.disabled = false;
+        } catch (e) {
+            bukaModal("73000", function(m){ if(m>0) { riwayatData.push({text:"Manual", nominal:m}); akumulasiUang+=m; localStorage.setItem('pbb_riwayat',JSON.stringify(riwayatData)); localStorage.setItem('pbb_total',akumulasiUang); updateDashboard(); } btnJepret.disabled=false; });
         }
     });
 
-    btnManual.addEventListener('click', () => {
-        let inputUser = prompt("Masukkan nominal Rupiah langsung:", "73000");
-        if (!inputUser) return;
-        let nominalBersih = parseInt(inputUser.replace(/[.,\s]/g, "")) || 0;
-        if (nominalBersih > 0) {
-            simpanData("Manual", nominalBersih);
-            statusDiv.innerHTML = "🟢 Berhasil disimpan secara manual!";
-        }
-    });
-
-    function simpanData(metode, nominal) {
-        riwayatData.push({ text: metode, nominal: nominal });
-        akumulasiUang += nominal;
-        localStorage.setItem('pbb_riwayat', JSON.stringify(riwayatData));
-        localStorage.setItem('pbb_total', akumulasiUang);
-        updateDashboard();
-    }
+    btnManual.addEventListener('click', () => { bukaModal("73000", function(m){ if(m>0){ riwayatData.push({text:"Manual",nominal:m}); akumulasiUang+=m; localStorage.setItem('pbb_riwayat',JSON.stringify(riwayatData)); localStorage.setItem('pbb_total',akumulasiUang); updateDashboard(); } }); });
 
     function updateDashboard() {
         document.getElementById('stat-total').innerHTML = "Rp " + akumulasiUang.toLocaleString('id-ID');
         document.getElementById('stat-dokumen').innerHTML = riwayatData.length + " Struk";
         const tbody = document.getElementById('log-body');
-        if (riwayatData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #666;">Belum ada data.</td></tr>`;
-            return;
-        }
+        if (riwayatData.length === 0) return;
         tbody.innerHTML = riwayatData.map((data, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td><span style="background:#2c3e50; padding:3px 8px; border-radius:4px; font-size:11px;">${data.text}</span></td>
-                <td style="color:#2ecc71; font-weight:bold;">Rp ${data.nominal.toLocaleString('id-ID')}</td>
-            </tr>
+            <tr><td>${index + 1}</td><td><span class="badge">${data.text}</span></td><td style="color:var(--accent-green); font-weight:700;">Rp ${data.nominal.toLocaleString('id-ID')}</td></tr>
         `).reverse().join('');
     }
 
     btnDownload.addEventListener('click', () => {
-        if(riwayatData.length === 0) { alert("Belum ada data!"); return; }
+        if(riwayatData.length === 0) return;
         let csv = "No,Metode,Nominal Pajak\n";
         riwayatData.forEach((d, i) => { csv += `${i+1},${d.text},${d.nominal}\n`; });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -218,12 +278,7 @@
         document.body.removeChild(link);
     });
 
-    btnReset.addEventListener('click', () => {
-        if (confirm("Kosongkan rekap?")) {
-            localStorage.clear(); riwayatData = []; akumulasiUang = 0; updateDashboard();
-            statusDiv.innerHTML = "🗑️ Data dibersihkan.";
-        }
-    });
+    btnReset.addEventListener('click', () => { if(confirm("Kosongkan data?")) { localStorage.clear(); riwayatData=[]; akumulasiUang=0; updateDashboard(); } });
 </script>
 </body>
 </html>
