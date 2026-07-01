@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lensa Scanner PBB Mandiri - High Contrast</title>
+    <title>Lensa Scanner PBB Mandiri - Grayscale</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 15px; text-align: center; }
@@ -15,12 +15,12 @@
         .card p { margin: 0; font-size: 20px; font-weight: bold; color: #2ecc71; }
         #video-container { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid #2ecc71; margin-bottom: 15px; }
         
-        /* ⚡ FILTER KONTRAS TINGGI AGAR TEKS STRUK MAKIN JELAS & HITAM PUTIH MAKSIMAL ⚡ */
+        /* ⚡ FILTER GRAYSCALE MURNI AGAR DISTORSI WARNA KERTAS HILANG ⚡ */
         video { 
             width: 100%; 
             display: block; 
             transform: scaleX(1); 
-            filter: contrast(190%) brightness(110%) grayscale(100%); 
+            filter: grayscale(100%); 
         }
         
         button { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
@@ -37,8 +37,8 @@
 <body>
 
 <div class="container">
-    <h2>⚡ Lensa PBB Kontras Tinggi</h2>
-    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Mode Offline Mandiri - Teks Dipertajam Otomatis</p>
+    <h2>⚡ Lensa PBB Grayscale</h2>
+    <p style="margin: 0 0 15px 0; font-size: 12px; color: #888;">Mode Offline Mandiri - Filter Abu-Abu Murni</p>
 
     <div class="dashboard">
         <div class="card">
@@ -91,41 +91,37 @@
     const btnDownload = document.getElementById('btn-download');
     const btnReset = document.getElementById('btn-reset');
 
-    // State Aplikasi (Disimpan di Memori Lokal Browser HP)
+    // State Data di HP
     let riwayatData = JSON.parse(localStorage.getItem('pbb_riwayat')) || [];
     let akumulasiUang = parseInt(localStorage.getItem('pbb_total')) || 0;
 
-    // Sinkronisasi Tampilan Awal Dashboard
     updateDashboard();
 
-    // Jalankan Kamera Otomatis Penuh (Utamakan Kamera Belakang HP)
+    // Jalankan Kamera Belakang HP
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
         .then(stream => { video.srcObject = stream; })
         .catch(err => { statusDiv.innerHTML = "Gagal memuat kamera: " + err.message; });
 
-    // PROSES SCANNER INTELIJEN JEPRET & OCR
+    // PROSES SCANNER JEPRET & OCR
     btnJepret.addEventListener('click', async () => {
         statusDiv.innerHTML = "📸 Mengunci gambar...";
         btnJepret.disabled = true;
 
-        // Ambil frame foto dari video kamera
         const context = canvas.getContext('2d');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
-        // ⚡ BERIKAN FILTER KONTRAS PADA KANVAS SEBELUM DI-SCAN OLEH AI ⚡
-        context.filter = 'contrast(190%) brightness(110%) grayscale(100%)';
+        // ⚡ GUNAKAN FILTER GRAYSCALE KE CANVAS SEBELUM DI-SCAN ⚡
+        context.filter = 'grayscale(100%)';
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         statusDiv.innerHTML = "🧠 AI lokal sedang membedah teks struk (Mohon tunggu)...";
 
         try {
-            // Jalankan Engine OCR Tesseract langsung di browser HP
             const { data: { text } } = await Tesseract.recognize(canvas, 'ind', {
                 logger: m => { if(m.status === 'recognizing') statusDiv.innerHTML = `Membaca teks: ${Math.floor(m.progress * 100)}%`; }
             });
 
-            // Ekstraksi Nominal Rupiah menggunakan Regex (Mencari nominal angka di sekitar teks pemicu)
             let nominalDitemukan = 0;
             let barisTeks = text.split("\n");
             
@@ -136,7 +132,7 @@
                     if (angkaMatch) {
                         let angkaBersih = angkaMatch[angkaMatch.length - 1].replace(/[.,]/g, "");
                         let hasilParses = parseInt(angkaBersih);
-                        if (hasilParses > 1000) { // Validasi jika nominal di atas seribu rupiah
+                        if (hasilParses > 1000) {
                             nominalDitemukan = hasilParses;
                             break;
                         }
@@ -144,20 +140,17 @@
                 }
             }
 
-            // jika AI Ragu atau Gagal mendeteksi teks angka rupiah yang valid
+            // Fallback manual jika tulisan tetap tidak lolos regex
             if (nominalDitemukan === 0) {
-                // Skenario Cadangan Aman: Minta input manual lewat popup cepat
                 let koreksi = prompt("AI mendeteksi teks namun ragu angka nominalnya. Sila ketik manual nominal Rupiah struk ini:", "0");
                 nominalDitemukan = parseInt(koreksi.replace(/[.,]/g, "")) || 0;
             }
 
             if (nominalDitemukan > 0) {
-                // Simpan Data Baru ke State
                 let teksRingkas = text.substring(0, 30).replace(/\n/g, " ") + "...";
                 riwayatData.push({ text: teksRingkas, nominal: nominalDitemukan });
                 akumulasiUang += nominalDitemukan;
 
-                // Amankan ke memori HP biar kalau halaman ketutup data tidak hilang
                 localStorage.setItem('pbb_riwayat', JSON.stringify(riwayatData));
                 localStorage.setItem('pbb_total', akumulasiUang);
 
@@ -174,7 +167,6 @@
         }
     });
 
-    // FUNGSI UPDATE DASHBOARD & TABEL RIWAYAT
     function updateDashboard() {
         document.getElementById('stat-total').innerHTML = "Rp " + akumulasiUang.toLocaleString('id-ID');
         document.getElementById('stat-dokumen').innerHTML = riwayatData.length + " Struk";
@@ -191,10 +183,9 @@
                 <td>${data.text}</td>
                 <td style="color:#2ecc71; font-weight:bold;">Rp ${data.nominal.toLocaleString('id-ID')}</td>
             </tr>
-        `).reverse().join(''); // Riwayat terbaru akan muncul di baris paling atas tabel
+        `).reverse().join('');
     }
 
-    // DOWNLOAD LAPORAN FORMAT CSV (Bisa langsung dibuka di Excel Komputer)
     btnDownload.addEventListener('click', () => {
         if(riwayatData.length === 0) { alert("Belum ada data untuk diunduh!"); return; }
         
@@ -212,7 +203,6 @@
         document.body.removeChild(link);
     });
 
-    // RESET TOTAL DATA
     btnReset.addEventListener('click', () => {
         if (confirm("Apakah Anda yakin ingin menghapus seluruh akumulasi data scan hari ini?")) {
             localStorage.clear();
