@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎙️ Voice PBB Pro - Editor Pro</title>
+    <title>🎙️ Voice PBB Pro - Multi Setoran</title>
     <style>
         :root {
             --bg-main: #0b0f19;
@@ -29,9 +29,20 @@
         }
 
         .container { width: 100%; max-width: 460px; }
-        header { text-align: left; margin-bottom: 25px; }
+        header { text-align: left; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
         h2 { font-size: 24px; font-weight: 800; margin: 0; color: #fff; }
         header p { margin: 4px 0 0 0; font-size: 12px; color: var(--accent-blue); font-weight: 600; text-transform: uppercase; }
+        
+        /* Badge Indikator Setoran Aktif */
+        .setoran-badge {
+            background: rgba(41, 182, 246, 0.15);
+            color: var(--accent-blue);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid rgba(41, 182, 246, 0.3);
+        }
 
         .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .card { background: var(--bg-card); padding: 16px; border-radius: 16px; border: 1px solid var(--border-color); }
@@ -43,19 +54,19 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 24px;
-            padding: 40px 20px;
+            padding: 35px 20px;
             margin-bottom: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
-            min-height: 180px;
+            min-height: 170px;
             box-sizing: border-box;
         }
 
         .mic-button {
-            width: 80px; height: 80px;
+            width: 75px; height: 75px;
             background: var(--accent-microphone);
             border-radius: 50%;
             border: none;
@@ -66,14 +77,12 @@
             box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
             transition: all 0.3s ease;
         }
-
         .mic-button.listening {
             animation: pulse 1.5s infinite;
             background: var(--accent-green);
             box-shadow: 0 0 20px rgba(0, 230, 118, 0.4);
         }
-
-        .mic-icon { font-size: 32px; color: white; }
+        .mic-icon { font-size: 30px; color: white; }
 
         @keyframes pulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.6); }
@@ -86,26 +95,36 @@
 
         .action-buttons { display: flex; flex-direction: column; gap: 10px; }
         button { width: 100%; padding: 16px; font-size: 15px; font-weight: 700; border-radius: 14px; border: none; cursor: pointer; transition: 0.2s; }
+        
+        /* Tombol Selesai Kloter Baru */
+        .btn-kloter-baru {
+            background: linear-gradient(90deg, #00c853, #00b0ff);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.2);
+            margin-bottom: 5px;
+        }
+        .btn-kloter-baru:active { opacity: 0.9; }
+
         .secondary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 1px solid var(--border-color); }
         .btn-danger { background: rgba(255, 82, 82, 0.1); color: var(--accent-red); border: 1px solid rgba(255, 82, 82, 0.2); }
 
-        /* TABEL DENGAN MANIPULASI DATA (UBAH & HAPUS) */
+        /* TABEL LOG RIWAYAT */
         .log-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); font-size: 14px; margin-top: 20px; }
         .log-table th, .log-table td { padding: 12px 14px; text-align: left; }
         .log-table th { background: rgba(255,255,255,0.02); color: var(--text-secondary); font-size: 12px; border-bottom: 1px solid var(--border-color); }
-        .badge { background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 6px; font-size: 11px; }
-        
+        .badge { background: rgba(255, 255, 255, 0.06); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .badge-setoran { background: rgba(3, 169, 244, 0.15); color: #64b5f6; }
+
         .action-cell { display: flex; gap: 6px; justify-content: flex-end; }
         .btn-table-edit { background: rgba(255, 145, 0, 0.15); color: var(--accent-orange); padding: 6px 10px; font-size: 11px; border-radius: 8px; font-weight: 600; width: auto; }
         .btn-table-delete { background: rgba(255, 82, 82, 0.15); color: var(--accent-red); padding: 6px 10px; font-size: 11px; border-radius: 8px; font-weight: 600; width: auto; }
 
-        /* MODAL CUSTOM POPUP & INPUT FORMAT RUPIAH */
+        /* MODAL POPUP */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5, 8, 15, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.2s; padding: 20px; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-box { background: #141c2f; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 340px; border-radius: 20px; padding: 24px; }
         
-        /* Wadah Input Rupiah Modern */
         .currency-input-container { position: relative; width: 100%; margin-bottom: 20px; }
         .currency-input-container input { width: 100%; padding: 14px; background: #0b0f19; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: var(--accent-green); font-size: 24px; font-weight: 800; text-align: center; box-sizing: border-box; }
         
@@ -117,8 +136,11 @@
 
 <div class="container">
     <header>
-        <p>Ekstraksi Suara + Manajemen Data</p>
-        <h2>Voice PBB Scanner</h2>
+        <div>
+            <h2>Voice PBB Scanner</h2>
+            <p>Engine Kloter Otomatis</p>
+        </div>
+        <div class="setoran-badge" id="label-setoran-aktif">Setoran 1</div>
     </header>
 
     <div class="dashboard">
@@ -136,14 +158,16 @@
         <button class="mic-button" id="btn-bicara">
             <span class="mic-icon" id="mic-icon">🎙️</span>
         </button>
-        <div id="status">Ketuk mikrofon lalu sebutkan nominalnya...</div>
+        <div id="status">Ketuk mikrofon lalu sebutkan nominal...</div>
         <div id="transcript-preview"></div>
     </div>
 
     <div class="action-buttons">
+        <button class="btn-kloter-baru" id="btn-pindah-kloter">🔒 SELESAI & BUKA SETORAN BARU</button>
+        
         <div class="secondary-grid">
             <button class="btn-secondary" id="btn-download">💾 Unduh CSV</button>
-            <button class="btn-danger" id="btn-reset">🗑️ Reset Semua</button>
+            <button class="btn-danger" id="btn-reset">🗑️ Reset Mutlak</button>
         </div>
     </div>
 
@@ -151,7 +175,7 @@
         <thead>
             <tr>
                 <th>No</th>
-                <th>Metode</th>
+                <th>Kelompok</th>
                 <th>Nominal</th>
                 <th style="text-align: right;">Aksi</th>
             </tr>
@@ -165,7 +189,7 @@
 <div class="modal-overlay" id="custom-modal">
     <div class="modal-box">
         <h3 id="modal-title" style="margin:0 0 8px 0; font-size:18px;">Konfirmasi Hasil</h3>
-        <p style="margin:0 0 16px 0; font-size:13px; color:var(--text-secondary);">Masukkan nominal hitungan mata uang Rupiah:</p>
+        <p style="margin:0 0 16px 0; font-size:13px; color:var(--text-secondary);">Periksa kembali nominal hitungan mata uang Rupiah:</p>
         
         <div class="currency-input-container">
             <input type="text" id="modal-input" placeholder="Rp 0">
@@ -185,6 +209,8 @@
     const previewDiv = document.getElementById('transcript-preview');
     const btnDownload = document.getElementById('btn-download');
     const btnReset = document.getElementById('btn-reset');
+    const btnPindahKloter = document.getElementById('btn-pindah-kloter');
+    const labelSetoranAktif = document.getElementById('label-setoran-aktif');
 
     const modal = document.getElementById('custom-modal');
     const modalTitle = document.getElementById('modal-title');
@@ -194,35 +220,29 @@
 
     let riwayatData = JSON.parse(localStorage.getItem('pbb_riwayat')) || [];
     let akumulasiUang = parseInt(localStorage.getItem('pbb_total')) || 0;
+    // Load nomor id setoran yang sedang aktif saat ini (bawaan: 1)
+    let nomorSetoranAktif = parseInt(localStorage.getItem('pbb_nomor_setoran_aktif')) || 1;
     
     let currentCallback = null;
-    let editIndex = null; // Menandai baris indeks mana yang sedang diubah
 
     updateDashboard();
 
-    // Fungsi Format Teks Angka Langsung ke Tampilan Rupiah (Contoh: 73000 -> Rp 73.000)
     function formatKeRupiah(angka) {
         let stringAngka = angka.toString().replace(/[^0-9]/g, '');
         if (!stringAngka) return 'Rp 0';
-        let nilaiInt = parseInt(stringAngka);
-        return 'Rp ' + nilaiInt.toLocaleString('id-ID');
+        return 'Rp ' + parseInt(stringAngka).toLocaleString('id-ID');
     }
 
-    // Event Listener: Mengubah input ketikan biasa secara dinamis menjadi format Rupiah saat diketik
     modalInput.addEventListener('input', (e) => {
         let posisiKursor = e.target.selectionStart;
         let panjangAwal = e.target.value.length;
-        
-        // Ambil hanya angka murni dari input teks
         let angkaMurni = e.target.value.replace(/[^0-9]/g, '');
         e.target.value = formatKeRupiah(angkaMurni);
-        
-        // Sesuaikan posisi kursor ketikan agar tidak mental ke ujung kanan
         let selisihPanjang = e.target.value.length - panjangAwal;
         e.target.setSelectionRange(posisiKursor + selisihPanjang, posisiKursor + selisihPanjang);
     });
 
-    // Pengaturan Voice Recognition Browser
+    // Voice Engine
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
     let isListening = false;
@@ -231,40 +251,37 @@
         recognition = new SpeechRecognition();
         recognition.lang = 'id-ID';
         recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
 
         recognition.onstart = () => {
             isListening = true;
             btnBbicara.classList.add('listening');
             micIcon.innerText = "🛑";
-            statusDiv.innerHTML = "🔴 Mendengarkan... Sebutkan nominal sekarang.";
+            statusDiv.innerHTML = `🔴 Mendengarkan untuk <b>Setoran ${nomorSetoranAktif}</b>...`;
             previewDiv.innerHTML = "";
         };
 
-        recognition.onspeechend = () => { recognition.stop(); };
         recognition.onend = () => { isListening = false; btnBbicara.classList.remove('listening'); micIcon.innerText = "🎙️"; };
+        recognition.onspeechend = () => { recognition.stop(); };
 
         recognition.onresult = (event) => {
             let hasilSuara = event.results[0][0].transcript.toLowerCase();
             previewDiv.innerHTML = `Didengar: "${hasilSuara}"`;
+            let angkaHasil = konversiTeksKeAngka(hasilSuara);
             
-            let angkaHasilEkstraksi = konversiTeksKeAngka(hasilSuara);
-            editIndex = null; // Ini adalah penambahan data baru, bukan mengedit baris lama
-            modalTitle.innerText = "Konfirmasi Hasil Suara";
-
-            bukaModal(angkaHasilEkstraksi > 0 ? angkaHasilEkstraksi : 73000, function(nominalFinal) {
+            modalTitle.innerText = `Simpan ke Setoran ${nomorSetoranAktif}`;
+            bukaModal(angkaHasil > 0 ? angkaHasil : 73000, function(nominalFinal) {
                 if (nominalFinal > 0) {
-                    riwayatData.push({ text: "Voice", nominal: nominalFinal });
+                    // Gabungkan informasi kloter langsung ke baris data
+                    riwayatData.push({ 
+                        kloter: `Setoran ${nomorSetoranAktif}`, 
+                        text: "Voice", 
+                        nominal: nominalFinal 
+                    });
                     hitungUlangTotal();
-                    statusDiv.innerHTML = "🟢 Berhasil disimpan dari suara!";
+                    statusDiv.innerHTML = `🟢 Tersimpan di Setoran ${nomorSetoranAktif}!`;
                 }
             });
         };
-
-        recognition.onerror = () => { statusDiv.innerHTML = "❌ Gagal mengenali suara. Coba lagi."; };
-    } else {
-        statusDiv.innerHTML = "❌ Browser tidak mendukung input suara.";
-        btnBbicara.disabled = true;
     }
 
     btnBbicara.addEventListener('click', () => {
@@ -272,19 +289,11 @@
         if (isListening) { recognition.stop(); } else { recognition.start(); }
     });
 
-    // Mesin Penerjemah Kata Bahasa Indonesia ke Angka Murni
     function konversiTeksKeAngka(teks) {
-        let angkaLangsung = teks.replace(/[^0-9]/g, "");
-        if (angkaLangsung.length > 0) return parseInt(angkaLangsung);
-
-        const kamus = {
-            'nol': 0, 'satu': 1, 'dua': 2, 'tiga': 3, 'empat': 4, 'lima': 5, 
-            'enam': 6, 'tujuh': 7, 'delapan': 8, 'sembilan': 9, 'sepuluh': 10, 'sebelas': 11
-        };
-
-        let kata = teks.split(/\s+/);
-        let total = 0; let temp = 0;
-
+        let langsung = teks.replace(/[^0-9]/g, "");
+        if (langsung.length > 0) return parseInt(langsung);
+        const kamus = { 'nol': 0, 'satu': 1, 'dua': 2, 'tiga': 3, 'empat': 4, 'lima': 5, 'enam': 6, 'tujuh': 7, 'delapan': 8, 'sembilan': 9, 'sepuluh': 10, 'sebelas': 11 };
+        let kata = teks.split(/\s+/); let total = 0; let temp = 0;
         for (let i = 0; i < kata.length; i++) {
             let k = kata[i];
             if (kamus[k] !== undefined) { temp += kamus[k]; }
@@ -294,9 +303,24 @@
             else if (k === 'ribu') { if (temp === 0) temp = 1; total += temp * 1000; temp = 0; }
             else if (k === 'juta') { if (temp === 0) temp = 1; total += temp * 1000000; temp = 0; }
         }
-        total += temp;
-        return total;
+        return total + temp;
     }
+
+    // INTERAKSI PEMINDAHAN KLOTER SETORAN BARU
+    btnPindahKloter.addEventListener('click', () => {
+        if (riwayatData.filter(d => d.kloter === `Setoran ${nomorSetoranAktif}`).length === 0) {
+            alert(`Setoran ${nomorSetoranAktif} masih kosong! Isi minimal 1 data sebelum membuka setoran baru.`);
+            return;
+        }
+
+        if (confirm(`Kunci hitungan Setoran ${nomorSetoranAktif} dan lanjut ke Setoran ${nomorSetoranAktif + 1}?`)) {
+            nomorSetoranAktif++;
+            localStorage.setItem('pbb_nomor_setoran_aktif', nomorSetoranAktif);
+            updateDashboard();
+            statusDiv.innerHTML = `🔒 Setoran baru dibuka! Sekarang merekap di <b>Setoran ${nomorSetoranAktif}</b>.`;
+            previewDiv.innerHTML = "";
+        }
+    });
 
     function bukaModal(valDefault, callback) {
         modalInput.value = formatKeRupiah(valDefault);
@@ -306,40 +330,31 @@
     }
 
     modalCancel.addEventListener('click', () => { modal.classList.remove('active'); });
-    
     modalConfirm.addEventListener('click', () => {
-        // Ambil hanya angka murni dari string format rupiah modal
         let angkaBersih = parseInt(modalInput.value.replace(/[^0-9]/g, '')) || 0;
         modal.classList.remove('active');
         if (currentCallback) currentCallback(angkaBersih);
     });
 
-    // FUNGSI MANIPULASI DATA: UBAH DATA TEREKAM
     function aksiUbahData(index) {
-        editIndex = index;
-        modalTitle.innerText = `Ubah Data Ke-${index + 1}`;
-        
+        modalTitle.innerText = `Ubah Nominal Data`;
         bukaModal(riwayatData[index].nominal, function(nominalBaru) {
             if (nominalBaru > 0) {
                 riwayatData[index].nominal = nominalBaru;
-                // Pertahankan metode lama tetapi tambahkan keterangan diedit jika perlu
-                if(!riwayatData[index].text.includes("*")) riwayatData[index].text += " *"; 
                 hitungUlangTotal();
-                statusDiv.innerHTML = `✏️ Data ke-${index + 1} berhasil diperbarui!`;
+                statusDiv.innerHTML = "✏️ Nominal berhasil diperbarui!";
             }
         });
     }
 
-    // FUNGSI MANIPULASI DATA: HAPUS SATU DATA TEREKAM
     function aksiHapusData(index) {
-        if (confirm(`Apakah Anda yakin ingin menghapus data nominal Rp ${riwayatData[index].nominal.toLocaleString('id-ID')} pada baris ke-${index + 1}?`)) {
+        if (confirm("Hapus baris data ini?")) {
             riwayatData.splice(index, 1);
             hitungUlangTotal();
-            statusDiv.innerHTML = `🗑️ Data baris ke-${index + 1} berhasil dihapus.`;
+            statusDiv.innerHTML = "🗑️ Data berhasil dihapus.";
         }
     }
 
-    // Fungsi Pembantu untuk sinkronisasi ulang data array ke LocalStorage
     function hitungUlangTotal() {
         akumulasiUang = riwayatData.reduce((sum, item) => sum + item.nominal, 0);
         localStorage.setItem('pbb_riwayat', JSON.stringify(riwayatData));
@@ -348,6 +363,7 @@
     }
 
     function updateDashboard() {
+        labelSetoranAktif.innerText = `Setoran ${nomorSetoranAktif}`;
         document.getElementById('stat-total').innerHTML = "Rp " + akumulasiUang.toLocaleString('id-ID');
         document.getElementById('stat-dokumen').innerHTML = riwayatData.length + " Struk";
         const tbody = document.getElementById('log-body');
@@ -357,39 +373,45 @@
             return;
         }
 
-        // Tampilkan list riwayat dibalik (data terbaru paling atas)
-        tbody.innerHTML = riwayatData.map((data, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td><span class="badge" style="color:var(--accent-blue);">${data.text}</span></td>
-                <td style="color:var(--accent-green); font-weight:700;">Rp ${data.nominal.toLocaleString('id-ID')}</td>
-                <td>
-                    <div class="action-cell">
-                        <button class="btn-table-edit" onclick="aksiUbahData(${index})">Ubah</button>
-                        <button class="btn-table-delete" onclick="aksiHapusData(${index})">Hapus</button>
-                    </div>
-                </td>
-            </tr>
-        `).reverse().join('');
+        tbody.innerHTML = riwayatData.map((data, index) => {
+            // Berikan fallback nama jika ada sisa data lama yang belum punya label kloter
+            let namaKloter = data.kloter || "Setoran 1";
+            return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>
+                        <span class="badge badge-setoran">${namaKloter}</span>
+                        <span class="badge" style="opacity: 0.6;">${data.text}</span>
+                    </td>
+                    <td style="color:var(--accent-green); font-weight:700;">Rp ${data.nominal.toLocaleString('id-ID')}</td>
+                    <td>
+                        <div class="action-cell">
+                            <button class="btn-table-edit" onclick="aksiUbahData(${index})">Ubah</button>
+                            <button class="btn-table-delete" onclick="aksiHapusData(${index})">Hapus</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).reverse().join('');
     }
 
     btnDownload.addEventListener('click', () => {
         if(riwayatData.length === 0) return;
-        let csv = "No,Metode,Nominal Pajak\n";
-        riwayatData.forEach((d, i) => { csv += `${i+1},${d.text.replace(' *','')},${d.nominal}\n`; });
+        let csv = "No,Kelompok Setoran,Metode,Nominal Pajak\n";
+        riwayatData.forEach((d, i) => { csv += `${i+1},${d.kloter || 'Setoran 1'},${d.text},${d.nominal}\n`; });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", `Rekap_PBB_Voice.csv`);
+        link.setAttribute("download", `Rekap_PBB_Bergrup.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     });
 
     btnReset.addEventListener('click', () => { 
-        if(confirm("Apakah Anda yakin ingin menghapus SELURUH rekap data harian Anda?")) { 
-            localStorage.clear(); riwayatData=[]; akumulasiUang=0; updateDashboard(); 
-            statusDiv.innerHTML = "🗑️ Seluruh database rekapan harian dibersihkan.";
+        if(confirm("PERINGATAN! Ini akan menghapus semua Setoran (1, 2, 3...) beserta seluruh riwayatnya secara permanen. Lanjutkan?")) { 
+            localStorage.clear(); riwayatData=[]; akumulasiUang=0; nomorSetoranAktif = 1; updateDashboard(); 
+            statusDiv.innerHTML = "🗑️ Seluruh database dibersihkan kembali ke Setoran 1.";
             previewDiv.innerHTML = "";
         } 
     });
