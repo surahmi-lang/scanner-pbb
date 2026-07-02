@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎙️ Suara PBB Pro</title>
+    <title>🎙️ Voice PBB Pro - Editor Pro</title>
     <style>
         :root {
             --bg-main: #0b0f19;
@@ -11,6 +11,8 @@
             --border-color: rgba(255, 255, 255, 0.08);
             --accent-green: #00e676;
             --accent-blue: #29b6f6;
+            --accent-orange: #ff9100;
+            --accent-red: #ff5252;
             --accent-microphone: #ff3366;
             --text-primary: #ffffff;
             --text-secondary: #94a3b8;
@@ -26,7 +28,7 @@
             justify-content: center;
         }
 
-        .container { width: 100%; max-width: 440px; }
+        .container { width: 100%; max-width: 460px; }
         header { text-align: left; margin-bottom: 25px; }
         h2 { font-size: 24px; font-weight: 800; margin: 0; color: #fff; }
         header p { margin: 4px 0 0 0; font-size: 12px; color: var(--accent-blue); font-weight: 600; text-transform: uppercase; }
@@ -37,7 +39,6 @@
         .card p { margin: 0; font-size: 20px; font-weight: 700; }
         #stat-total { color: var(--accent-green); }
 
-        /* AREA MIKROFON & GELOMBANG SUARA */
         .voice-container {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -72,10 +73,7 @@
             box-shadow: 0 0 20px rgba(0, 230, 118, 0.4);
         }
 
-        .mic-icon {
-            font-size: 32px;
-            color: white;
-        }
+        .mic-icon { font-size: 32px; color: white; }
 
         @keyframes pulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.6); }
@@ -83,22 +81,8 @@
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
         }
 
-        #status {
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin-top: 15px;
-            text-align: center;
-            font-style: italic;
-            min-height: 20px;
-        }
-
-        #transcript-preview {
-            margin-top: 10px;
-            font-size: 13px;
-            color: var(--accent-blue);
-            font-weight: 500;
-            text-align: center;
-        }
+        #status { color: var(--text-secondary); font-size: 14px; margin-top: 15px; text-align: center; font-style: italic; }
+        #transcript-preview { margin-top: 10px; font-size: 13px; color: var(--accent-blue); font-weight: 500; text-align: center; }
 
         .action-buttons { display: flex; flex-direction: column; gap: 10px; }
         button { width: 100%; padding: 16px; font-size: 15px; font-weight: 700; border-radius: 14px; border: none; cursor: pointer; transition: 0.2s; }
@@ -106,16 +90,25 @@
         .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 1px solid var(--border-color); }
         .btn-danger { background: rgba(255, 82, 82, 0.1); color: var(--accent-red); border: 1px solid rgba(255, 82, 82, 0.2); }
 
+        /* TABEL DENGAN MANIPULASI DATA (UBAH & HAPUS) */
         .log-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); font-size: 14px; margin-top: 20px; }
-        .log-table th, .log-table td { padding: 14px; text-align: left; }
+        .log-table th, .log-table td { padding: 12px 14px; text-align: left; }
         .log-table th { background: rgba(255,255,255,0.02); color: var(--text-secondary); font-size: 12px; border-bottom: 1px solid var(--border-color); }
         .badge { background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 6px; font-size: 11px; }
+        
+        .action-cell { display: flex; gap: 6px; justify-content: flex-end; }
+        .btn-table-edit { background: rgba(255, 145, 0, 0.15); color: var(--accent-orange); padding: 6px 10px; font-size: 11px; border-radius: 8px; font-weight: 600; width: auto; }
+        .btn-table-delete { background: rgba(255, 82, 82, 0.15); color: var(--accent-red); padding: 6px 10px; font-size: 11px; border-radius: 8px; font-weight: 600; width: auto; }
 
-        /* MODAL CUSTOM POPUP */
+        /* MODAL CUSTOM POPUP & INPUT FORMAT RUPIAH */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5, 8, 15, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.2s; padding: 20px; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-box { background: #141c2f; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 340px; border-radius: 20px; padding: 24px; }
-        .modal-box input { width: 100%; padding: 14px; background: #0b0f19; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 24px; font-weight: 700; text-align: center; box-sizing: border-box; margin-bottom: 20px; }
+        
+        /* Wadah Input Rupiah Modern */
+        .currency-input-container { position: relative; width: 100%; margin-bottom: 20px; }
+        .currency-input-container input { width: 100%; padding: 14px; background: #0b0f19; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: var(--accent-green); font-size: 24px; font-weight: 800; text-align: center; box-sizing: border-box; }
+        
         .modal-flex { display: flex; gap: 10px; }
         .btn-modal-primary { background: var(--accent-green); color: #000; font-weight: 700; }
     </style>
@@ -124,7 +117,7 @@
 
 <div class="container">
     <header>
-        <p>Mode Ekstraksi Suara Pintar</p>
+        <p>Ekstraksi Suara + Manajemen Data</p>
         <h2>Voice PBB Scanner</h2>
     </header>
 
@@ -150,23 +143,34 @@
     <div class="action-buttons">
         <div class="secondary-grid">
             <button class="btn-secondary" id="btn-download">💾 Unduh CSV</button>
-            <button class="btn-danger" id="btn-reset">🗑️ Reset Data</button>
+            <button class="btn-danger" id="btn-reset">🗑️ Reset Semua</button>
         </div>
     </div>
 
     <table class="log-table">
-        <thead><tr><th>No</th><th>Metode</th><th>Nominal</th></tr></thead>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Metode</th>
+                <th>Nominal</th>
+                <th style="text-align: right;">Aksi</th>
+            </tr>
+        </thead>
         <tbody id="log-body">
-            <tr><td colspan="3" style="text-align: center; color: var(--text-secondary); padding:20px;">Belum ada rekapan harian.</td></tr>
+            <tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding:20px;">Belum ada rekapan harian.</td></tr>
         </tbody>
     </table>
 </div>
 
 <div class="modal-overlay" id="custom-modal">
     <div class="modal-box">
-        <h3 style="margin:0 0 8px 0; font-size:18px;">Konfirmasi Hasil Suara</h3>
-        <p style="margin:0 0 16px 0; font-size:13px; color:var(--text-secondary);">Berikut nominal yang didengar AI, koreksi jika salah:</p>
-        <input type="number" id="modal-input">
+        <h3 id="modal-title" style="margin:0 0 8px 0; font-size:18px;">Konfirmasi Hasil</h3>
+        <p style="margin:0 0 16px 0; font-size:13px; color:var(--text-secondary);">Masukkan nominal hitungan mata uang Rupiah:</p>
+        
+        <div class="currency-input-container">
+            <input type="text" id="modal-input" placeholder="Rp 0">
+        </div>
+
         <div class="modal-flex">
             <button class="btn-secondary" style="margin:0; padding:12px;" id="modal-cancel">Batal</button>
             <button class="btn-modal-primary" style="margin:0; padding:12px;" id="modal-confirm">Simpan</button>
@@ -183,24 +187,49 @@
     const btnReset = document.getElementById('btn-reset');
 
     const modal = document.getElementById('custom-modal');
+    const modalTitle = document.getElementById('modal-title');
     const modalInput = document.getElementById('modal-input');
     const modalConfirm = document.getElementById('modal-confirm');
     const modalCancel = document.getElementById('modal-cancel');
 
     let riwayatData = JSON.parse(localStorage.getItem('pbb_riwayat')) || [];
     let akumulasiUang = parseInt(localStorage.getItem('pbb_total')) || 0;
+    
     let currentCallback = null;
+    let editIndex = null; // Menandai baris indeks mana yang sedang diubah
 
     updateDashboard();
 
-    // Inisialisasi Fitur Speech Recognition Browser
+    // Fungsi Format Teks Angka Langsung ke Tampilan Rupiah (Contoh: 73000 -> Rp 73.000)
+    function formatKeRupiah(angka) {
+        let stringAngka = angka.toString().replace(/[^0-9]/g, '');
+        if (!stringAngka) return 'Rp 0';
+        let nilaiInt = parseInt(stringAngka);
+        return 'Rp ' + nilaiInt.toLocaleString('id-ID');
+    }
+
+    // Event Listener: Mengubah input ketikan biasa secara dinamis menjadi format Rupiah saat diketik
+    modalInput.addEventListener('input', (e) => {
+        let posisiKursor = e.target.selectionStart;
+        let panjangAwal = e.target.value.length;
+        
+        // Ambil hanya angka murni dari input teks
+        let angkaMurni = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = formatKeRupiah(angkaMurni);
+        
+        // Sesuaikan posisi kursor ketikan agar tidak mental ke ujung kanan
+        let selisihPanjang = e.target.value.length - panjangAwal;
+        e.target.setSelectionRange(posisiKursor + selisihPanjang, posisiKursor + selisihPanjang);
+    });
+
+    // Pengaturan Voice Recognition Browser
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
     let isListening = false;
 
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
-        recognition.lang = 'id-ID'; // Mengunci bahasa pengenalan ke Bahasa Indonesia
+        recognition.lang = 'id-ID';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
 
@@ -212,120 +241,142 @@
             previewDiv.innerHTML = "";
         };
 
-        recognition.onspeechend = () => {
-            recognition.stop();
-        };
-
-        recognition.onend = () => {
-            isListening = false;
-            btnBbicara.classList.remove('listening');
-            micIcon.innerText = "🎙️";
-        };
+        recognition.onspeechend = () => { recognition.stop(); };
+        recognition.onend = () => { isListening = false; btnBbicara.classList.remove('listening'); micIcon.innerText = "🎙️"; };
 
         recognition.onresult = (event) => {
             let hasilSuara = event.results[0][0].transcript.toLowerCase();
             previewDiv.innerHTML = `Didengar: "${hasilSuara}"`;
             
             let angkaHasilEkstraksi = konversiTeksKeAngka(hasilSuara);
-            
-            bukaModal(angkaHasilEkstraksi > 0 ? angkaHasilEkstraksi : "73000", function(nominalFinal) {
+            editIndex = null; // Ini adalah penambahan data baru, bukan mengedit baris lama
+            modalTitle.innerText = "Konfirmasi Hasil Suara";
+
+            bukaModal(angkaHasilEkstraksi > 0 ? angkaHasilEkstraksi : 73000, function(nominalFinal) {
                 if (nominalFinal > 0) {
                     riwayatData.push({ text: "Voice", nominal: nominalFinal });
-                    akumulasiUang += nominalFinal;
-                    localStorage.setItem('pbb_riwayat', JSON.stringify(riwayatData));
-                    localStorage.setItem('pbb_total', akumulasiUang);
-                    updateDashboard();
+                    hitungUlangTotal();
                     statusDiv.innerHTML = "🟢 Berhasil disimpan dari suara!";
                 }
             });
         };
 
-        recognition.onerror = (event) => {
-            statusDiv.innerHTML = "❌ Gagal mengenali suara. Coba lagi.";
-        };
-
+        recognition.onerror = () => { statusDiv.innerHTML = "❌ Gagal mengenali suara. Coba lagi."; };
     } else {
-        statusDiv.innerHTML = "❌ Browser Anda tidak mendukung input suara.";
+        statusDiv.innerHTML = "❌ Browser tidak mendukung input suara.";
         btnBbicara.disabled = true;
     }
 
     btnBbicara.addEventListener('click', () => {
         if (!recognition) return;
-        if (isListening) {
-            recognition.stop();
-        } else {
-            recognition.start();
-        }
+        if (isListening) { recognition.stop(); } else { recognition.start(); }
     });
 
-    // 🧠 MESIN PENERJEMAH TERREKSTUR: Mengubah ucapan lisan Indonesia menjadi Angka Murni
+    // Mesin Penerjemah Kata Bahasa Indonesia ke Angka Murni
     function konversiTeksKeAngka(teks) {
-        // Jika user langsung mengucapkan angka digit murni (misal: "73000")
         let angkaLangsung = teks.replace(/[^0-9]/g, "");
         if (angkaLangsung.length > 0) return parseInt(angkaLangsung);
 
-        // Kamus konversi kata dasar
         const kamus = {
             'nol': 0, 'satu': 1, 'dua': 2, 'tiga': 3, 'empat': 4, 'lima': 5, 
             'enam': 6, 'tujuh': 7, 'delapan': 8, 'sembilan': 9, 'sepuluh': 10, 'sebelas': 11
         };
 
         let kata = teks.split(/\s+/);
-        let total = 0;
-        let temp = 0;
+        let total = 0; let temp = 0;
 
         for (let i = 0; i < kata.length; i++) {
             let k = kata[i];
-            
-            if (kamus[k] !== undefined) {
-                temp += kamus[k];
-            } else if (k === 'puluh') {
-                if (temp === 0) temp = 1;
-                temp *= 10;
-            } else if (k === 'belas') {
-                if (temp === 0) temp = 1;
-                temp += 10;
-            } else if (k === 'ratus') {
-                if (temp === 0) temp = 1;
-                temp *= 100;
-            } else if (k === 'ribu') {
-                if (temp === 0) temp = 1;
-                total += temp * 1000;
-                temp = 0;
-            } else if (k === 'juta') {
-                if (temp === 0) temp = 1;
-                total += temp * 1000000;
-                temp = 0;
-            }
+            if (kamus[k] !== undefined) { temp += kamus[k]; }
+            else if (k === 'puluh') { if (temp === 0) temp = 1; temp *= 10; }
+            else if (k === 'belas') { if (temp === 0) temp = 1; temp += 10; }
+            else if (k === 'ratus') { if (temp === 0) temp = 1; temp *= 100; }
+            else if (k === 'ribu') { if (temp === 0) temp = 1; total += temp * 1000; temp = 0; }
+            else if (k === 'juta') { if (temp === 0) temp = 1; total += temp * 1000000; temp = 0; }
         }
         total += temp;
         return total;
     }
 
     function bukaModal(valDefault, callback) {
-        modalInput.value = valDefault;
+        modalInput.value = formatKeRupiah(valDefault);
         modal.classList.add('active');
         modalInput.focus();
         currentCallback = callback;
     }
 
-    modalCancel.addEventListener('click', () => { modal.classList.remove('active'); statusDiv.innerHTML = "<span>Ketuk mikrofon kembali untuk mendikte...</span>"; });
-    modalConfirm.addEventListener('click', () => { let v = parseInt(modalInput.value) || 0; modal.classList.remove('active'); if(currentCallback) currentCallback(v); });
+    modalCancel.addEventListener('click', () => { modal.classList.remove('active'); });
+    
+    modalConfirm.addEventListener('click', () => {
+        // Ambil hanya angka murni dari string format rupiah modal
+        let angkaBersih = parseInt(modalInput.value.replace(/[^0-9]/g, '')) || 0;
+        modal.classList.remove('active');
+        if (currentCallback) currentCallback(angkaBersih);
+    });
+
+    // FUNGSI MANIPULASI DATA: UBAH DATA TEREKAM
+    function aksiUbahData(index) {
+        editIndex = index;
+        modalTitle.innerText = `Ubah Data Ke-${index + 1}`;
+        
+        bukaModal(riwayatData[index].nominal, function(nominalBaru) {
+            if (nominalBaru > 0) {
+                riwayatData[index].nominal = nominalBaru;
+                // Pertahankan metode lama tetapi tambahkan keterangan diedit jika perlu
+                if(!riwayatData[index].text.includes("*")) riwayatData[index].text += " *"; 
+                hitungUlangTotal();
+                statusDiv.innerHTML = `✏️ Data ke-${index + 1} berhasil diperbarui!`;
+            }
+        });
+    }
+
+    // FUNGSI MANIPULASI DATA: HAPUS SATU DATA TEREKAM
+    function aksiHapusData(index) {
+        if (confirm(`Apakah Anda yakin ingin menghapus data nominal Rp ${riwayatData[index].nominal.toLocaleString('id-ID')} pada baris ke-${index + 1}?`)) {
+            riwayatData.splice(index, 1);
+            hitungUlangTotal();
+            statusDiv.innerHTML = `🗑️ Data baris ke-${index + 1} berhasil dihapus.`;
+        }
+    }
+
+    // Fungsi Pembantu untuk sinkronisasi ulang data array ke LocalStorage
+    function hitungUlangTotal() {
+        akumulasiUang = riwayatData.reduce((sum, item) => sum + item.nominal, 0);
+        localStorage.setItem('pbb_riwayat', JSON.stringify(riwayatData));
+        localStorage.setItem('pbb_total', akumulasiUang);
+        updateDashboard();
+    }
 
     function updateDashboard() {
         document.getElementById('stat-total').innerHTML = "Rp " + akumulasiUang.toLocaleString('id-ID');
         document.getElementById('stat-dokumen').innerHTML = riwayatData.length + " Struk";
         const tbody = document.getElementById('log-body');
-        if (riwayatData.length === 0) return;
+        
+        if (riwayatData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding:20px;">Belum ada rekapan harian.</td></tr>`;
+            return;
+        }
+
+        // Tampilkan list riwayat dibalik (data terbaru paling atas)
         tbody.innerHTML = riwayatData.map((data, index) => `
-            <tr><td>${index + 1}</td><td><span class="badge" style="color:var(--accent-blue);">${data.text}</span></td><td style="color:var(--accent-green); font-weight:700;">Rp ${data.nominal.toLocaleString('id-ID')}</td></tr>
+            <tr>
+                <td>${index + 1}</td>
+                <td><span class="badge" style="color:var(--accent-blue);">${data.text}</span></td>
+                <td style="color:var(--accent-green); font-weight:700;">Rp ${data.nominal.toLocaleString('id-ID')}</td>
+                <td>
+                    <div class="action-cell">
+                        <button class="btn-table-edit" onclick="aksiUbahData(${index})">Ubah</button>
+                        <button class="btn-table-delete" onclick="aksiHapusData(${index})">Hapus</button>
+                    </div>
+                </td>
+            </tr>
         `).reverse().join('');
     }
 
     btnDownload.addEventListener('click', () => {
         if(riwayatData.length === 0) return;
         let csv = "No,Metode,Nominal Pajak\n";
-        riwayatData.forEach((d, i) => { csv += `${i+1},${d.text},${d.nominal}\n`; });
+        riwayatData.forEach((d, i) => { csv += `${i+1},${d.text.replace(' *','')},${d.nominal}\n`; });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
@@ -336,9 +387,9 @@
     });
 
     btnReset.addEventListener('click', () => { 
-        if(confirm("Hapus semua rekap data?")) { 
+        if(confirm("Apakah Anda yakin ingin menghapus SELURUH rekap data harian Anda?")) { 
             localStorage.clear(); riwayatData=[]; akumulasiUang=0; updateDashboard(); 
-            statusDiv.innerHTML = "🗑️ Data harian dibersihkan.";
+            statusDiv.innerHTML = "🗑️ Seluruh database rekapan harian dibersihkan.";
             previewDiv.innerHTML = "";
         } 
     });
